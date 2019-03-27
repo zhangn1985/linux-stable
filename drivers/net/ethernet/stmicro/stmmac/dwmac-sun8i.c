@@ -582,12 +582,10 @@ static int sun8i_dwmac_init(struct platform_device *pdev, void *priv)
 	struct sunxi_priv_data *gmac = priv;
 	int ret;
 
-	if (gmac->regulator) {
-		ret = regulator_enable(gmac->regulator);
-		if (ret) {
-			dev_err(&pdev->dev, "Fail to enable regulator\n");
-			return ret;
-		}
+	ret = regulator_enable(gmac->regulator);
+	if (ret) {
+		dev_err(&pdev->dev, "Fail to enable regulator\n");
+		return ret;
 	}
 
 	if (gmac->use_internal_phy) {
@@ -1047,8 +1045,7 @@ static void sun8i_dwmac_exit(struct platform_device *pdev, void *priv)
 	if (gmac->variant->soc_has_internal_phy)
 		sun8i_dwmac_unpower_internal_phy(gmac);
 
-	if (gmac->regulator)
-		regulator_disable(gmac->regulator);
+	regulator_disable(gmac->regulator);
 }
 
 static void sun8i_dwmac_set_mac_loopback(void __iomem *ioaddr, bool enable)
@@ -1170,12 +1167,12 @@ static int sun8i_dwmac_probe(struct platform_device *pdev)
 	}
 
 	/* Optional regulator for PHY */
-	gmac->regulator = devm_regulator_get_optional(dev, "phy");
+	gmac->regulator = devm_regulator_get(dev, "phy");
 	if (IS_ERR(gmac->regulator)) {
-		if (PTR_ERR(gmac->regulator) == -EPROBE_DEFER)
-			return -EPROBE_DEFER;
-		dev_info(dev, "No regulator found\n");
-		gmac->regulator = NULL;
+		ret = PTR_ERR(gmac->regulator);
+		if (ret != -EPROBE_DEFER)
+			dev_err(dev, "Failed to get PHY regulator (%d)\n", ret);
+		return ret;
 	}
 
 	/* The "GMAC clock control" register might be located in the
