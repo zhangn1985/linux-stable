@@ -61,6 +61,8 @@ struct emac_variant {
  * @ephy_clk:			reference to the optional EPHY clock for
  *				the internal PHY
  * @regulator_phy:		reference to the optional regulator
+ * @regulator_phy_io:		reference to the optional regulator for
+ *				PHY I/O pins
  * @rst_ephy:			reference to the optional EPHY reset for
  *				the internal PHY
  * @variant:			reference to the current board variant
@@ -72,6 +74,7 @@ struct emac_variant {
 struct sunxi_priv_data {
 	struct clk *ephy_clk;
 	struct regulator *regulator_phy;
+	struct regulator *regulator_phy_io;
 	struct reset_control *rst_ephy;
 	const struct emac_variant *variant;
 	struct regmap_field *regmap_field;
@@ -584,10 +587,16 @@ static int sun8i_dwmac_init(struct platform_device *pdev, void *priv)
 	struct sunxi_priv_data *gmac = priv;
 	int ret;
 
+	ret = regulator_enable(gmac->regulator_phy_io);
+	if (ret) {
+		dev_err(&pdev->dev, "Fail to enable PHY I/O regulator\n");
+		return ret;
+	}
+
 	ret = regulator_enable(gmac->regulator_phy);
 	if (ret) {
 		dev_err(&pdev->dev, "Fail to enable PHY regulator\n");
-		return ret;
+		goto err_disable_regulator_phy_io;
 	}
 
 	if (gmac->use_internal_phy) {
@@ -600,6 +609,8 @@ static int sun8i_dwmac_init(struct platform_device *pdev, void *priv)
 
 err_disable_regulator:
 	regulator_disable(gmac->regulator_phy);
+err_disable_regulator_phy_io:
+	regulator_disable(gmac->regulator_phy_io);
 
 	return ret;
 }
@@ -1047,6 +1058,7 @@ static void sun8i_dwmac_exit(struct platform_device *pdev, void *priv)
 		sun8i_dwmac_unpower_internal_phy(gmac);
 
 	regulator_disable(gmac->regulator_phy);
+	regulator_disable(gmac->regulator_phy_io);
 }
 
 static void sun8i_dwmac_set_mac_loopback(void __iomem *ioaddr, bool enable)
@@ -1171,6 +1183,15 @@ static int sun8i_dwmac_probe(struct platform_device *pdev)
 	gmac->regulator_phy = devm_regulator_get(dev, "phy");
 	if (IS_ERR(gmac->regulator_phy)) {
 		dev_err_probe(dev, ret, "Failed to get PHY regulator\n");
+		return ret;
+	}
+
+	/* Optional regulator for PHY I/O pins */
+	gmac->regulator_phy_io = devm_regulator_get(dev, "phy-io");
+	if (IS_ERR(gmac->regulator_phy_io)) {
+		ret = PTR_ERR(gmac->regulator_phy_io);
+		if (ret != -EPROBE_DEFER)
+			dev_err(dev, "Failed to get PHY I/O regulator (%d)\n", ret);
 		return ret;
 	}
 
