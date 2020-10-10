@@ -609,7 +609,12 @@ static int dw_hdmi_rockchip_bind(struct device *dev, struct device *master,
 	}
 
 	drm_encoder_helper_add(encoder, &dw_hdmi_rockchip_encoder_helper_funcs);
-	drm_simple_encoder_init(drm, encoder, DRM_MODE_ENCODER_TMDS);
+
+	ret = drm_simple_encoder_init(drm, encoder, DRM_MODE_ENCODER_TMDS);
+	if (ret) {
+		DRM_DEV_ERROR(hdmi->dev, "Failed to init encoder: %d\n", ret);
+		goto err_disable_clk;
+	}
 
 	platform_set_drvdata(pdev, hdmi);
 
@@ -628,7 +633,7 @@ static int dw_hdmi_rockchip_bind(struct device *dev, struct device *master,
 
 err_bind:
 	drm_encoder_cleanup(encoder);
-
+err_disable_clk:
 	return ret;
 }
 
