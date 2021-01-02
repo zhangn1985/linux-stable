@@ -393,6 +393,11 @@ static const struct dev_pm_ops axp20x_pek_pm_ops = {
 	.resume_noirq = pm_sleep_ptr(axp20x_pek_resume_noirq),
 };
 
+static void axp20x_pek_shutdown(struct platform_device *pdev)
+{
+	axp20x_pek_suspend(&pdev->dev);
+}
+
 static const struct platform_device_id axp_pek_id_match[] = {
 	{
 		.name = "axp20x-pek",
@@ -408,6 +413,7 @@ MODULE_DEVICE_TABLE(platform, axp_pek_id_match);
 
 static struct platform_driver axp20x_pek_driver = {
 	.probe		= axp20x_pek_probe,
+	.shutdown	= axp20x_pek_shutdown,
 	.id_table	= axp_pek_id_match,
 	.driver		= {
 		.name		= "axp20x-pek",
