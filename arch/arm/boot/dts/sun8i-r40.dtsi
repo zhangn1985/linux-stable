@@ -1082,6 +1082,7 @@
 			#size-cells = <1>;
 			dma-ranges = <0x00000000 0x40000000 0x80000000>;
 			#interconnect-cells = <1>;
+			status = "disabled";
 		};
 
 		tcon_top: tcon-top@1c70000 {

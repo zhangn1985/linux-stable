@@ -311,6 +311,7 @@
 
 &mbus {
 	compatible = "allwinner,sun8i-h3-mbus";
+	status = "disabled";
 };
 
 &mixer1 {
