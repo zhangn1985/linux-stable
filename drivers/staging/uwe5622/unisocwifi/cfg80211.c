@@ -1747,10 +1747,6 @@ static int sprdwl_cfg80211_disconnect(struct wiphy *wiphy,
 	struct sprdwl_vif *vif = netdev_priv(ndev);
 	enum sm_state old_state = vif->sm_state;
 	int ret;
-#ifdef SYNC_DISCONNECT
-	u32 msec;
-	ktime_t kt;
-#endif
 #ifdef STA_SOFTAP_SCC_MODE
 	struct sprdwl_intf *intf = (struct sprdwl_intf *)vif->priv->hw_priv;
 	intf->sta_home_channel = 0;
