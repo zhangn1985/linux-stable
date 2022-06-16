@@ -338,6 +338,12 @@ enum {
 	 * claim to support it.
 	 */
 	HCI_QUIRK_BROKEN_READ_ENC_KEY_SIZE,
+
+       /*
+        * Device declares that support Park link status, but it really
+       * does not support it and fails to initialize
+       */
+       HCI_QUIRK_BROKEN_PARK_LINK_STATUS,
 };
 
 /* HCI device flags */
