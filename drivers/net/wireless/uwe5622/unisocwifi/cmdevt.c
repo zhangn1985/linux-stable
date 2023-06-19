@@ -3301,7 +3301,7 @@ void sprdwl_event_chan_changed(struct sprdwl_vif *vif, u8 *data, u16 len)
 						NL80211_CHAN_HT20);
 		else
 			wl_err("%s, ch is null!\n", __func__);
-		cfg80211_ch_switch_notify(vif->ndev, &chandef, 0);
+		cfg80211_ch_switch_notify(vif->ndev, &chandef, 0, 0);
 	}
 }
 
