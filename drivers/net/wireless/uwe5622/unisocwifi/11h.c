@@ -75,7 +75,7 @@ void sprdwl_dfs_chan_sw_work_queue(struct work_struct *work)
 		container_of(delayed_work, struct sprdwl_vif,
 				 dfs_chan_sw_work);
 
-	cfg80211_ch_switch_notify(vif->ndev, &vif->dfs_chandef, 0);
+	cfg80211_ch_switch_notify(vif->ndev, &vif->dfs_chandef, 0, 0);
 }
 
 /*This is delayed work emits CAC finished event for cfg80211 if
