@@ -608,13 +608,6 @@ static int rx_copy_work_func(void *work)
 	struct wcn_usb_work_data *work_data;
 	struct list_head rx_tx_head;
 
-	do {
-		struct sched_param param;
-
-		param.sched_priority = -20;
-		sched_setscheduler(current, SCHED_FIFO, &param);
-	} while (0);
-
 	copy_kthread = (struct wcn_usb_copy_kthread *)work;
 
 
@@ -702,14 +695,6 @@ static int tx_copy_work_func(void *work)
 	int buf_size = 0;
 	int ret;
 	int mbuf_num;
-
-
-	do {
-		struct sched_param param;
-
-		param.sched_priority = -20;
-		sched_setscheduler(current, SCHED_FIFO, &param);
-	} while (0);
 
 	copy_kthread = (struct wcn_usb_copy_kthread *)work;
 
@@ -1383,15 +1368,6 @@ int wcn_usb_work_func(void *work)
 	work_data = container_of(work, struct wcn_usb_work_data, wcn_usb_work);
 #endif
 	work_data = (struct wcn_usb_work_data *)work;
-
-#if 0
-	do {
-		struct sched_param param;
-
-		param.sched_priority = 1;
-		sched_setscheduler(current, SCHED_FIFO, &param);
-	} while (0);
-#endif
 
 GET_RX_TX_HEAD:
 	reinit_completion(&work_data->callback_complete);
