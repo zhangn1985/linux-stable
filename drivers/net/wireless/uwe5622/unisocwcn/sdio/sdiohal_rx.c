@@ -193,7 +193,6 @@ static void sdiohal_rx_wait(void)
 int sdiohal_rx_thread(void *data)
 {
 	struct sdiohal_data_t *p_data = sdiohal_get_data();
-	struct sched_param param;
 	int read_len, mbuf_num;
 	int ret = 0;
 	unsigned int rx_dtbs = 0;
@@ -204,8 +203,6 @@ int sdiohal_rx_thread(void *data)
 	static long time_total_ns;
 	static int times_count;
 
-	param.sched_priority = SDIO_RX_TASK_PRIO;
-	sched_setscheduler(current, SCHED_FIFO, &param);
 	sdiohal_rx_adapt_set_dtbs(0);
 	sdiohal_rx_adapt_set_pac_num(1);
 
