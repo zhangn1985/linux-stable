@@ -11,6 +11,7 @@
 #include <linux/seq_file.h>
 #include <linux/version.h>
 #include <linux/export.h>
+#include <linux/device.h>
 #include <marlin_platform.h>
 
 #define VERSION         "marlin2 V0.1"
