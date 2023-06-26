@@ -20,7 +20,7 @@
 
 #include "msg.h"
 #include <linux/math64.h>
-#include <linux/pm_wakeup.h>
+#include <linux/device.h>
 
 #define SPRDWL_VALID_CONFIG		(0x80)
 #define  CMD_WAIT_TIMEOUT		(3000)
