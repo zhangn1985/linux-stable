@@ -155,25 +155,41 @@
 	/* Audio components */
 	es8316-sound {
 		compatible = "simple-audio-card";
+		pinctrl-names = "default";
+		pinctrl-0 = <&hp_det_pin>;
 		simple-audio-card,name = "rockchip,es8316-codec";
 		simple-audio-card,format = "i2s";
 		simple-audio-card,mclk-fs = <256>;
 
 		simple-audio-card,widgets =
 			"Microphone", "Mic Jack",
-			"Headphone", "Headphones";
+			"Headphone", "Headphones",
+			"Speaker", "Speaker";
 		simple-audio-card,routing =
 			"MIC1", "Mic Jack",
 			"Headphones", "HPOL",
-			"Headphones", "HPOR";
+			"Headphones", "HPOR",
+			"Speaker Amplifier INR", "HPOR",
+			"Speaker", "Speaker Amplifier OUTR";
+
+		simple-audio-card,hp-det-gpio = <&gpio4 RK_PD4 GPIO_ACTIVE_HIGH>;
+		simple-audio-card,aux-devs = <&speaker_amp>;
+		simple-audio-card,pin-switches = "Speaker";
 
 		simple-audio-card,cpu {
-		        sound-dai = <&i2s0>;
+			sound-dai = <&i2s0>;
 		};
 
 		simple-audio-card,codec {
-		        sound-dai = <&es8316>;
+			sound-dai = <&es8316>;
 		};
+	};
+
+	speaker_amp: speaker-amplifier {
+		compatible = "simple-audio-amplifier";
+		enable-gpios = <&gpio0 RK_PB3 GPIO_ACTIVE_HIGH>;
+		sound-name-prefix = "Speaker Amplifier";
+		VCC-supply = <&vcc5v0_sys>;
 	};
 
 	adc-keys {
@@ -584,19 +600,16 @@
 };
 
 &i2c1 {
+	clock-frequency = <100000>;
+	i2c-scl-falling-time-ns = <4>;
+	i2c-scl-rising-time-ns = <168>;
 	status = "okay";
-	i2c-scl-rising-time-ns = <450>;
-	i2c-scl-falling-time-ns = <15>;
 
-	es8316: codec@11 {
+	es8316: audio-codec@11 {
 		compatible = "everest,es8316";
 		reg = <0x11>;
 		clocks = <&cru SCLK_I2S_8CH_OUT>;
 		clock-names = "mclk";
-		//pinctrl-names = "default";
-		//pinctrl-0 = <&i2s_8ch_mclk>;
-		hp-gpios = <&gpio4 RK_PD4 GPIO_ACTIVE_HIGH>;
-		spk-gpios = <&gpio0 RK_PB3 GPIO_ACTIVE_HIGH>;
 		#sound-dai-cells = <0>;
 	};
 
@@ -631,8 +644,6 @@
 &i2s0 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&i2s0_2ch_bus>;
-	assigned-clocks = <&cru SCLK_I2SOUT_SRC>;
-	assigned-clock-parents = <&cru SCLK_I2S0_8CH>;
 	rockchip,capture-channels = <2>;
 	rockchip,playback-channels = <2>;
 	#sound-dai-cells = <0>;
@@ -640,9 +651,6 @@
 };
 
 &i2s1 {
-	assigned-clocks = <&cru SCLK_I2SOUT_SRC>;
-	assigned-clock-parents = <&cru SCLK_I2S1_8CH>;
-	pinctrl-names = "default";
 	pinctrl-0 = <&i2s1_2ch_bus>;
 	rockchip,playback-channels = <2>;
 	rockchip,capture-channels = <2>;
@@ -670,6 +678,11 @@
 };
 
 &pinctrl {
+	es8316 {
+		hp_det_pin: hp-det-pin {
+			rockchip,pins = <4 RK_PD4 RK_FUNC_GPIO &pcfg_pull_up>;
+		};
+	};
 	gmac {
 		phy_intb: phy-intb {
 			rockchip,pins = <3 RK_PB2 RK_FUNC_GPIO &pcfg_pull_up>;
