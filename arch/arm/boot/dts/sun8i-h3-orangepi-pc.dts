@@ -148,6 +148,7 @@
 };
 
 &ir {
+	linux,rc-map-name = "rc-khadas";
 	pinctrl-names = "default";
 	pinctrl-0 = <&r_ir_rx_pin>;
 	status = "okay";
@@ -230,7 +231,7 @@
 };
 
 &usb_otg {
-	dr_mode = "otg";
+	dr_mode = "host";
 	status = "okay";
 };
 
