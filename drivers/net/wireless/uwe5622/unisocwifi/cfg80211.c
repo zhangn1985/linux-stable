@@ -1530,9 +1530,16 @@ static int sprdwl_cfg80211_scan(struct wiphy *wiphy,
 		for (i = 0; i < n; i++) {
 			if (!ssids[i].ssid_len)
 				continue;
-			scan_ssids->len = ssids[i].ssid_len;
-			strncpy(scan_ssids->ssid, ssids[i].ssid,
-				ssids[i].ssid_len);
+			/* space left: 512 - scan_ssids_len - sizeof(scan_ssids->len) */
+			if ((512 - scan_ssids_len - sizeof(scan_ssids->len)) <= 0 ) {
+			    // No space left for SSID
+			    break;
+			}
+			// at least have 1byte for SSID
+			scan_ssids->len = min(ssids[i].ssid_len,
+			          (512 - scan_ssids_len - sizeof(scan_ssids->len)));
+			strncpy(scan_ssids->ssid, ssids[i].ssid, min(ssids[i].ssid_len,
+			          (512 - scan_ssids_len - sizeof(scan_ssids->len))));
 			scan_ssids_len += (ssids[i].ssid_len
 					   + sizeof(scan_ssids->len));
 			scan_ssids = (struct sprdwl_scan_ssid *)
