@@ -964,9 +964,10 @@ err_start:
 
 static int sprdwl_cfg80211_change_beacon(struct wiphy *wiphy,
 					 struct net_device *ndev,
-					 struct cfg80211_beacon_data *beacon)
+					 struct cfg80211_ap_update *params)
 {
 	struct sprdwl_vif *vif = netdev_priv(ndev);
+	struct cfg80211_beacon_data *beacon = &params->beacon;
 
 	wl_ndev_log(L_DBG, ndev, "%s\n", __func__);
 #ifdef DFS_MASTER
