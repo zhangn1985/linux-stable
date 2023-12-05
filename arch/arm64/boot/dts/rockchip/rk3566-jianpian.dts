@@ -181,6 +181,7 @@
 };
 
 &gpu {
+	mali-supply = <&vdd_gpu>;
 	status = "okay";
 };
 
@@ -257,8 +258,8 @@
 		vcc9-supply = <&vcc3v3_sys>;
 
 		regulators {
-			vdd_log: DCDC_REG1 {
-				regulator-name = "vdd_log";
+			vdd_logic: DCDC_REG1 {
+				regulator-name = "vdd_logic";
 				regulator-always-on;
 				regulator-boot-on;
 				regulator-init-microvolt = <900000>;
