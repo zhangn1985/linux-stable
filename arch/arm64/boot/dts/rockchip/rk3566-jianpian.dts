@@ -19,7 +19,6 @@
 
 	aliases {
 		ethernet0 = &gmac1;
-		mmc0 = &sdmmc0;
 		mmc1 = &sdmmc1;
 		mmc2 = &sdhci;
 	};
@@ -234,16 +233,15 @@
 		reg = <0x20>;
 		interrupt-parent = <&gpio0>;
 		interrupts = <RK_PA3 IRQ_TYPE_LEVEL_LOW>;
-		assigned-clocks = <&cru I2S1_MCLKOUT_TX>;
-		assigned-clock-parents = <&cru CLK_I2S1_8CH_TX>;
-		clock-names = "mclk";
-		clocks = <&cru I2S1_MCLKOUT_TX>;
+		//assigned-clocks = <&cru I2S1_MCLKOUT_TX>;
+		//assigned-clock-parents = <&cru CLK_I2S1_8CH_TX>;
+		//clock-names = "mclk";
+		//clocks = <&cru I2S1_MCLKOUT_TX>;
 		clock-output-names = "rk808-clkout1", "rk808-clkout2";
 
 		pinctrl-names = "default";
-		pinctrl-0 = <&pmic_int>, <&i2s1m0_mclk>;
+		pinctrl-0 = <&pmic_int>;
 		rockchip,system-power-controller;
-		#sound-dai-cells = <0>;
 		wakeup-source;
 		#clock-cells = <1>;
 
@@ -481,8 +479,7 @@
 
 	pmic {
 		pmic_int: pmic_int {
-			rockchip,pins =
-				<0 RK_PA3 RK_FUNC_GPIO &pcfg_pull_up>;
+			rockchip,pins =	<0 RK_PA3 RK_FUNC_GPIO &pcfg_pull_up>;
 		};
 	};
 
@@ -527,39 +524,22 @@
 	status = "okay";
 };
 
-&sdmmc0 {
-	bus-width = <4>;
-	cap-sd-highspeed;
-	cap-mmc-highspeed;
-	cd-gpios = <&gpio0 RK_PA4 GPIO_ACTIVE_LOW>;
-	disable-wp;
-	sd-uhs-sdr104;
-	pinctrl-names = "default";
-	pinctrl-0 = <&sdmmc0_bus4 &sdmmc0_clk &sdmmc0_cmd &sdmmc0_det>;
-	vmmc-supply = <&vcc3v3_sd>;
-	vqmmc-supply = <&vccio_sd>;
-	status = "okay";
-};
-
 &sdmmc1 {
 	/* WiFi & BT combo module AMPAK AP6398S */
-	#address-cells = <1>;
-	#size-cells = <0>;
 	bus-width = <4>;
-	clock-frequency = <150000000>;
-	cap-sdio-irq;
 	cap-sd-highspeed;
+	cap-sdio-irq;
 	disable-wp;
-	sd-uhs-sdr104;
-	supports-sdio;
 	keep-power-in-suspend;
 	mmc-pwrseq = <&sdio_pwrseq>;
 	non-removable;
 	pinctrl-names = "default";
 	pinctrl-0 = <&sdmmc1_bus4 &sdmmc1_cmd &sdmmc1_clk>;
-	vmmc-supply = <&vcc_3v3>;
-	vqmmc-supply = <&vcca_1v8>;
+	sd-uhs-sdr50;
+	supports-sdio;
 	status = "okay";
+	vmmc-supply = <&vcc3v3_sys>;
+	vqmmc-supply = <&vcca1v8_pmu>;
 
 	brcmf: wifi@1 {
 		compatible = "brcm,bcm4329-fmac";
@@ -602,9 +582,9 @@
 	bluetooth {
 		compatible = "brcm,bcm43438-bt";
 		clocks = <&rk809 1>;
-		clock-names = "ext_clock";
-		device-wake-gpios = <&gpio2 RK_PC1 GPIO_ACTIVE_HIGH>;
-		host-wake-gpios = <&gpio2 RK_PC0 GPIO_ACTIVE_HIGH>;
+		clock-names = "lpo";
+		device-wakeup-gpios = <&gpio2 RK_PC1 GPIO_ACTIVE_HIGH>;
+		host-wakeup-gpios = <&gpio2 RK_PC0 GPIO_ACTIVE_HIGH>;
 		shutdown-gpios = <&gpio2 RK_PB7 GPIO_ACTIVE_HIGH>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&bt_host_wake_l &bt_wake_l &bt_enable_h>;
