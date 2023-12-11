@@ -1185,6 +1185,11 @@ properties:
           - const: zkmagic,a95x-z2
           - const: rockchip,rk3318
 
+      - description: Rockchip RK3566 JianPian 8G TV Box
+        items:
+          - const: rockchip,rk3566-jianpian
+          - const: rockchip,rk3566
+
 additionalProperties: true
 
 ...
