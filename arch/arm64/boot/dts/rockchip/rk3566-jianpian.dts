@@ -525,6 +525,8 @@
 
 &sdmmc1 {
 	/* WiFi & BT combo module AMPAK AP6398S */
+	#address-cells = <1>;
+	#size-cells = <0>;
 	bus-width = <4>;
 	cap-sd-highspeed;
 	cap-sdio-irq;
