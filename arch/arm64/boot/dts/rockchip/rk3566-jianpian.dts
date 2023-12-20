@@ -18,6 +18,7 @@
 	compatible = "rockchip,rk3566-jianpian", "rockchip,rk3566";
 
 	aliases {
+		ethernet0 = &gmac1;
 		mmc0 = &sdmmc1;
 		mmc1 = &sdhci;
 	};
@@ -162,7 +163,7 @@
 	phy-mode = "rgmii";
 	clock_in_out = "output";
 	pinctrl-names = "default";
-	pinctrl-0 = <&gmac1m1_miim
+	pinctrl-0 = <&gmac1m0_miim
 			&gmac1m0_tx_bus2_level3
 			&gmac1m0_rx_bus2
 			&gmac1m0_rgmii_clk_level2
