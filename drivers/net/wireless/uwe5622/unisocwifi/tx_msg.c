@@ -317,7 +317,10 @@ void sprdwl_dequeue_data_list(struct mbuf_t *head, int num)
 /* seam for tx_thread */
 void tx_down(struct sprdwl_tx_msg *tx_msg)
 {
-	wait_for_completion(&tx_msg->tx_completed);
+	int ret;
+	do {
+		ret = wait_for_completion_interruptible(&tx_msg->tx_completed);
+	} while (ret == -ERESTARTSYS);
 }
 
 void tx_up(struct sprdwl_tx_msg *tx_msg)
