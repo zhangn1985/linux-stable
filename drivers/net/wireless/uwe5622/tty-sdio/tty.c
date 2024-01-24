@@ -26,6 +26,7 @@
 #include <linux/vmalloc.h>
 #include <linux/atomic.h>
 #ifdef CONFIG_OF
+#include <linux/of.h>
 #include <linux/of_device.h>
 #endif
 #include <linux/compat.h>
