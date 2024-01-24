@@ -22,6 +22,7 @@
 #include <linux/kthread.h>
 #include <linux/module.h>
 #include <linux/of_device.h>
+#include <linux/of_platform.h>
 #include <linux/of_gpio.h>
 #include <linux/pm_runtime.h>
 #include <linux/mmc/card.h>
