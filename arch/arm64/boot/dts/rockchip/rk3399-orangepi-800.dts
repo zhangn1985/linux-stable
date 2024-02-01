@@ -183,26 +183,6 @@
 	//	VCC-supply = <&vcc5v0_sys>;
 	//};
 
-	adc-keys {
-		compatible = "adc-keys";
-		io-channels = <&saradc 1>;
-		io-channel-names = "buttons";
-		poll-interval = <100>;
-		keyup-threshold-microvolt = <1800000>;
-
-		button-up {
-			label = "Volume Up";
-			linux,code = <KEY_VOLUMEUP>;
-			press-threshold-microvolt = <100000>;
-		};
-
-		button-down {
-			label = "Volume Down";
-			linux,code = <KEY_VOLUMEDOWN>;
-			press-threshold-microvolt = <300000>;
-		};
-	};
-
 	leds: gpio-leds {
 		compatible = "gpio-leds";
 		pinctrl-names = "default";
