@@ -217,6 +217,11 @@ properties:
               - friendlyarm,nanopi-r4s-enterprise
           - const: rockchip,rk3399
 
+      - description: Orangepi 800 keyboard
+        items:
+          - const: rockchip,rk3399-orangepi-800
+          - const: rockchip,rk3399
+
       - description: FriendlyElec NanoPi R5 series boards
         items:
           - enum:
