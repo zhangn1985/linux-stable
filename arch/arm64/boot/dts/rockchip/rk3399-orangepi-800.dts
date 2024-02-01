@@ -732,10 +732,6 @@
 	status = "okay";
 };
 
-&emmc_phy {
-	status = "okay";
-};
-
 &sdio0 {
 	clock-frequency = <150000000>;
 	clock-freq-min-max = <200000 50000000>;
@@ -767,6 +763,19 @@
 	vmmc-supply = <&vcc3v0_sd>;
 	vqmmc-supply = <&vcc_sdio>;
 	status = "okay";
+};
+
+&spi2 {
+	status = "okay";
+	pinctrl-names = "default", "sleep";
+	pinctrl-1 = <&spi2_gpio>;
+
+	spidev0: spidev@0 {
+		compatible = "rohm,dh2228fv";
+		reg = <0>;
+		spi-max-frequency = <10000000>;
+		status = "okay";
+	};
 };
 
 &tsadc {
@@ -884,15 +893,3 @@
 	status = "okay";
 };
 
-&spi2 {
-	status = "okay";
-	pinctrl-names = "default", "sleep";
-	pinctrl-1 = <&spi2_gpio>;
-
-	spidev0: spidev@0 {
-		compatible = "rohm,dh2228fv";
-		reg = <0>;
-		spi-max-frequency = <10000000>;
-		status = "okay";
-	};
-};
