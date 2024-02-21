@@ -9,7 +9,7 @@
 
 / {
 	chosen {
-		stdout-path = "serial2:115200n8";
+		stdout-path = "serial3:115200n8";
 	};
 
 	memory {
@@ -58,6 +58,14 @@
 			gpios = <&gpio0 RK_PA3 GPIO_ACTIVE_HIGH>;
 			linux,default-trigger = "default-on";
 		};
+	};
+
+	fan: pwm-fan {
+		compatible = "pwm-fan";
+		cooling-levels = <0 150 200 255>;
+		#cooling-cells = <2>;
+		pwms = <&pwm2 0 25000 0>;
+		fan-supply = <&vcc_sys>;
 	};
 
 	sdio_pwrseq: sdio-pwrseq {
@@ -119,6 +127,34 @@
 	opp-1800000000 {
 		opp-hz = /bits/ 64 <1800000000>;
 		opp-microvolt = <1400000>;
+	};
+};
+
+&cpu_thermal {
+	trips {
+		cpu_warm: cpu_warm {
+			temperature = <55000>;
+			hysteresis = <2000>;
+			type = "active";
+		};
+
+		cpu_hot: cpu_hot {
+			temperature = <65000>;
+			hysteresis = <2000>;
+			type = "active";
+		};
+	};
+
+	cooling-maps {
+		map2 {
+			trip = <&cpu_warm>;
+			cooling-device = <&fan THERMAL_NO_LIMIT 1>;
+		};
+
+		map3 {
+			trip = <&cpu_hot>;
+			cooling-device = <&fan 2 THERMAL_NO_LIMIT>;
+		};
 	};
 };
 
@@ -447,6 +483,10 @@
 	status = "okay";
 };
 
+&pwm2 {
+	status = "okay";
+};
+
 &saradc {
 	vref-supply = <&vcc18_ldo1>;
 	status = "okay";
@@ -504,10 +544,6 @@
 };
 
 &uart1 {
-	status = "okay";
-};
-
-&uart2 {
 	status = "okay";
 };
 
