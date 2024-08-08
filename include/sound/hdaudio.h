@@ -724,6 +724,7 @@ static inline unsigned int snd_array_index(struct snd_array *array, void *ptr)
 
 #define HDA_CONTROLLER_IS_APL(pci) (pci_match_id((struct pci_device_id []){ \
 			{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_HDA_APL) }, \
+			{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_JOULE) }, \
 			{ } \
 		}, pci))
 

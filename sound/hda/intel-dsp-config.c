@@ -54,6 +54,10 @@ static const struct config_entry config_table[] = {
 		.flags = FLAG_SOF,
 		.device = PCI_DEVICE_ID_INTEL_SST_TNG,
 	},
+	{
+		.flags = FLAG_SOF,
+		.device = PCI_DEVICE_ID_INTEL_JOULE,
+	},
 #endif
 /*
  * Skylake, Kabylake, Apollolake
