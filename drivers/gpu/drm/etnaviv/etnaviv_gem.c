@@ -697,21 +697,20 @@ int etnaviv_gem_new_handle(struct drm_device *dev, struct drm_file *file,
 	u32 size, u32 flags, u32 *handle)
 {
 	struct etnaviv_drm_private *priv = to_etnaviv_priv(dev);
-	struct drm_gem_object *obj = NULL;
+	struct etnaviv_gem_object *etnaviv_obj;
+	struct drm_gem_object *obj;
 	int ret;
 
 	size = PAGE_ALIGN(size);
 
-	ret = etnaviv_gem_new_impl(dev, flags, &etnaviv_gem_shmem_ops, &obj);
+	ret = etnaviv_gem_new_private(dev, size, flags, true,
+				      &etnaviv_gem_shmem_ops, &etnaviv_obj);
 	if (ret)
 		goto fail;
 
-	lockdep_set_class(&to_etnaviv_bo(obj)->lock, &etnaviv_shm_lock_class);
+	lockdep_set_class(&etnaviv_obj->lock, &etnaviv_shm_lock_class);
 
-	ret = drm_gem_object_init(dev, obj, size);
-	if (ret)
-		goto fail;
-
+	obj = &etnaviv_obj->base;
 	/*
 	 * Our buffers are kept pinned, so allocating them from the MOVABLE
 	 * zone is a really bad idea, and conflicts with CMA. See comments
@@ -732,7 +731,8 @@ fail:
 }
 
 int etnaviv_gem_new_private(struct drm_device *dev, size_t size, u32 flags,
-	const struct etnaviv_gem_ops *ops, struct etnaviv_gem_object **res)
+			    bool shmem, const struct etnaviv_gem_ops *ops,
+			    struct etnaviv_gem_object **res)
 {
 	struct drm_gem_object *obj;
 	int ret;
@@ -741,7 +741,15 @@ int etnaviv_gem_new_private(struct drm_device *dev, size_t size, u32 flags,
 	if (ret)
 		return ret;
 
-	drm_gem_private_object_init(dev, obj, size);
+	if (shmem) {
+		ret = drm_gem_object_init(dev, obj, size);
+		if (ret) {
+			drm_gem_private_object_fini(obj);
+			return ret;
+		}
+	} else {
+		drm_gem_private_object_init(dev, obj, size);
+	}
 
 	*res = to_etnaviv_bo(obj);
 
@@ -830,7 +838,7 @@ int etnaviv_gem_new_userptr(struct drm_device *dev, struct drm_file *file,
 	struct etnaviv_gem_object *etnaviv_obj;
 	int ret;
 
-	ret = etnaviv_gem_new_private(dev, size, ETNA_BO_CACHED,
+	ret = etnaviv_gem_new_private(dev, size, ETNA_BO_CACHED, false,
 				      &etnaviv_gem_userptr_ops, &etnaviv_obj);
 	if (ret)
 		return ret;
