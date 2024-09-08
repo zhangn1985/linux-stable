@@ -227,6 +227,30 @@ etnaviv_gem_get_vram_mapping(struct etnaviv_gem_object *obj,
 	return NULL;
 }
 
+static struct etnaviv_vram_mapping *
+etnaviv_gem_vram_mapping_new(struct etnaviv_gem_object *etnaviv_obj)
+{
+	struct etnaviv_vram_mapping *mapping;
+
+	mapping = kzalloc(sizeof(*mapping), GFP_KERNEL);
+	if (!mapping)
+		return NULL;
+
+	INIT_LIST_HEAD(&mapping->scan_node);
+	mapping->object = etnaviv_obj;
+	mapping->use = 1;
+
+	list_add_tail(&mapping->obj_node, &etnaviv_obj->vram_list);
+
+	return mapping;
+}
+
+static void etnaviv_gem_vram_mapping_destroy(struct etnaviv_vram_mapping *mapping)
+{
+	list_del(&mapping->obj_node);
+	kfree(mapping);
+}
+
 void etnaviv_gem_mapping_unreference(struct etnaviv_vram_mapping *mapping)
 {
 	struct etnaviv_gem_object *etnaviv_obj = mapping->object;
@@ -289,27 +313,20 @@ struct etnaviv_vram_mapping *etnaviv_gem_mapping_get(
 	 */
 	mapping = etnaviv_gem_get_vram_mapping(etnaviv_obj, NULL);
 	if (!mapping) {
-		mapping = kzalloc(sizeof(*mapping), GFP_KERNEL);
+		mapping = etnaviv_gem_vram_mapping_new(etnaviv_obj);
 		if (!mapping) {
 			ret = -ENOMEM;
 			goto out;
 		}
-
-		INIT_LIST_HEAD(&mapping->scan_node);
-		mapping->object = etnaviv_obj;
 	} else {
-		list_del(&mapping->obj_node);
+		mapping->use = 1;
 	}
-
-	mapping->use = 1;
 
 	ret = etnaviv_iommu_map_gem(mmu_context, etnaviv_obj,
 				    mmu_context->global->memory_base,
 				    mapping, va);
 	if (ret < 0)
-		kfree(mapping);
-	else
-		list_add_tail(&mapping->obj_node, &etnaviv_obj->vram_list);
+		etnaviv_gem_vram_mapping_destroy(mapping);
 
 out:
 	mutex_unlock(&etnaviv_obj->lock);
@@ -544,8 +561,7 @@ void etnaviv_gem_free_object(struct drm_gem_object *obj)
 		if (context)
 			etnaviv_iommu_unmap_gem(context, mapping);
 
-		list_del(&mapping->obj_node);
-		kfree(mapping);
+		etnaviv_gem_vram_mapping_destroy(mapping);
 	}
 
 	etnaviv_obj->ops->vunmap(etnaviv_obj);

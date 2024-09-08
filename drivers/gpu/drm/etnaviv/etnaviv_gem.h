@@ -31,6 +31,12 @@ struct etnaviv_vram_mapping {
 	u32 iova;
 };
 
+static inline struct etnaviv_vram_mapping *
+to_etnaviv_vram_mapping(struct drm_mm_node *vram)
+{
+	return container_of(vram, struct etnaviv_vram_mapping, vram_node);
+}
+
 struct etnaviv_gem_object {
 	struct drm_gem_object base;
 	const struct etnaviv_gem_ops *ops;
