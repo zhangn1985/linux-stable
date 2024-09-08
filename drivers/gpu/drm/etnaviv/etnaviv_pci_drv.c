@@ -5,6 +5,11 @@
 #include "etnaviv_drv.h"
 #include "etnaviv_pci_drv.h"
 
+static const struct etnaviv_pcie_ip_funcs jemo_9xxxx_gpu_pcie_ip_funcs = {
+	.init = jemo_pcie_init,
+	.fini = NULL,
+};
+
 static const struct etnaviv_pci_gpu_data
 gccore_platform_data[GCCORE_PCI_CHIP_ID_LAST] = {
 	{
@@ -18,7 +23,9 @@ gccore_platform_data[GCCORE_PCI_CHIP_ID_LAST] = {
 		.mmio_bar = 1,
 		.ip_block = {{0, 0x00900000, 0x00004000, "etnaviv-gpu,3d"},},
 		.has_dedicated_vram = true,
+		.has_iatu = true,
 		.has_display = true,
+		.pcie_ip_funcs = &jemo_9xxxx_gpu_pcie_ip_funcs,
 		.market_name = "JingJia Micro JM9100",
 	},
 	{
@@ -30,7 +37,9 @@ gccore_platform_data[GCCORE_PCI_CHIP_ID_LAST] = {
 		.ip_block = {{0, 0x00900000, 0x00004000, "etnaviv-gpu,3d"},
 			     {1, 0x00910000, 0x00004000, "etnaviv-gpu,3d"},},
 		.has_dedicated_vram = true,
+		.has_iatu = true,
 		.has_display = true,
+		.pcie_ip_funcs = &jemo_9xxxx_gpu_pcie_ip_funcs,
 		.market_name = "JingJia Micro JD9230P",
 	},
 	{
@@ -42,6 +51,7 @@ gccore_platform_data[GCCORE_PCI_CHIP_ID_LAST] = {
 		.ip_block = {{0, 0x00040000, 0x00004000, "etnaviv-gpu,3d"},
 			     {0, 0x000C0000, 0x00004000, "etnaviv-gpu,2d"},},
 		.has_dedicated_vram = true,
+		.has_iatu = false,
 		.has_display = true,
 		.market_name = "LingJiu GP102",
 	},
@@ -53,6 +63,7 @@ gccore_platform_data[GCCORE_PCI_CHIP_ID_LAST] = {
 		.mmio_bar = 0,
 		.ip_block = {{0, 0, 0x00004000, "etnaviv-gpu,3d"},},
 		.has_dedicated_vram = true,
+		.has_iatu = false,
 		.has_display = false,
 		.market_name = "GC1000 in LS7A1000",
 	},
@@ -83,6 +94,7 @@ static int etnaviv_pci_probe(struct pci_dev *pdev,
 			     const struct pci_device_id *ent)
 {
 	const struct etnaviv_pci_gpu_data *pdata;
+	const struct etnaviv_pcie_ip_funcs *pcie_ip_funcs;
 	struct device *dev = &pdev->dev;
 	unsigned int i;
 	unsigned int num_core;
@@ -101,6 +113,13 @@ static int etnaviv_pci_probe(struct pci_dev *pdev,
 	pdata = etnaviv_pci_get_platform_data(ent);
 	if (!pdata)
 		return -ENODEV;
+
+	pcie_ip_funcs = pdata->pcie_ip_funcs;
+	if (pcie_ip_funcs) {
+		ret = pcie_ip_funcs->init(pdev);
+		if (ret)
+			return ret;
+	}
 
 	num_core = pdata->num_core;
 

@@ -23,6 +23,11 @@ struct vivante_gc_ip_block {
 	char compatible[20];
 };
 
+struct etnaviv_pcie_ip_funcs {
+	int (*init)(struct pci_dev *pdev);
+	void (*fini)(struct pci_dev *pdev);
+};
+
 struct etnaviv_pci_gpu_data {
 	enum etnaviv_pci_chip_id chip_id;
 	u32 num_core;
@@ -31,12 +36,16 @@ struct etnaviv_pci_gpu_data {
 	u32 mmio_bar;
 	struct vivante_gc_ip_block ip_block[ETNA_MAX_IP_BLOCK];
 	bool has_dedicated_vram;
+	bool has_iatu;
 	bool has_display;
+	const struct etnaviv_pcie_ip_funcs *pcie_ip_funcs;
 	char market_name[24];
 };
 
 int etnaviv_register_pci_driver(void);
 void etnaviv_unregister_pci_driver(void);
+
+int jemo_pcie_init(struct pci_dev *pdev);
 
 #else
 
