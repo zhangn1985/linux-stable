@@ -17,6 +17,7 @@ etnaviv-y := \
 	etnaviv_perfmon.o \
 	etnaviv_sched.o
 
+etnaviv-$(CONFIG_DEBUG_FS) += etnaviv_debugfs.o
 etnaviv-$(CONFIG_DRM_ETNAVIV_PCI_DRIVER) += etnaviv_pci_drv.o \
 					    pcie_ip_setup.o
 

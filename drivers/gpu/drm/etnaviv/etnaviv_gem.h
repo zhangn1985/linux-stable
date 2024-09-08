@@ -134,4 +134,6 @@ void etnaviv_gem_mapping_unreference(struct etnaviv_vram_mapping *mapping);
 
 u64 etnaviv_obj_gpu_phys_addr(struct etnaviv_gem_object *etnaviv_obj);
 
+const struct etnaviv_gem_ops *etnaviv_gem_get_shmem_ops(void);
+
 #endif /* __ETNAVIV_GEM_H__ */

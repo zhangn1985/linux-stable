@@ -20,6 +20,7 @@
 #include <drm/drm_prime.h>
 
 #include "etnaviv_cmdbuf.h"
+#include "etnaviv_debugfs.h"
 #include "etnaviv_drv.h"
 #include "etnaviv_gpu.h"
 #include "etnaviv_gem.h"
@@ -183,6 +184,16 @@ static int etnaviv_gem_show(struct drm_device *dev, struct seq_file *m)
 	return 0;
 }
 
+static int etnaviv_sanity_test_show(struct drm_device *dev, struct seq_file *m)
+{
+	struct drm_printer printer = drm_seq_file_printer(m);
+
+	etnaviv_sanity_test_vram_impl(dev, &printer);
+	etnaviv_sanity_test_shmem_impl(dev, &printer);
+
+	return 0;
+}
+
 static int etnaviv_mm_show(struct drm_device *dev, struct seq_file *m)
 {
 	struct drm_printer p = drm_seq_file_printer(m);
@@ -296,6 +307,7 @@ static struct drm_info_list etnaviv_debugfs_list[] = {
 	{ "mm", show_unlocked, 0, etnaviv_mm_show },
 	{"mmu", show_each_gpu, 0, etnaviv_mmu_show},
 	{"ring", show_each_gpu, 0, etnaviv_ring_show},
+	{"sanity", show_unlocked, 0, etnaviv_sanity_test_show },
 };
 
 static void etnaviv_debugfs_init(struct drm_minor *minor)

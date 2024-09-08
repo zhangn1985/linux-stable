@@ -553,6 +553,11 @@ static const struct etnaviv_gem_ops etnaviv_gem_shmem_ops = {
 	.mmap = etnaviv_gem_mmap_obj,
 };
 
+const struct etnaviv_gem_ops *etnaviv_gem_get_shmem_ops(void)
+{
+	return &etnaviv_gem_shmem_ops;
+}
+
 void etnaviv_gem_free_object(struct drm_gem_object *obj)
 {
 	struct drm_device *drm = obj->dev;

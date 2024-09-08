@@ -4,6 +4,7 @@
 
 #include "etnaviv_drv.h"
 #include "etnaviv_gem.h"
+#include "etnaviv_gem_vram.h"
 #include "etnaviv_pci_drv.h"
 
 static struct lock_class_key etnaviv_vram_lock_class;
@@ -170,6 +171,11 @@ static const struct etnaviv_gem_ops etnaviv_gem_vram_ops = {
 	.vunmap = etnaviv_gem_vram_vunmap,
 	.mmap = etnaviv_gem_vram_mmap,
 };
+
+const struct etnaviv_gem_ops *etnaviv_gem_get_vram_ops(void)
+{
+	return &etnaviv_gem_vram_ops;
+}
 
 int etnaviv_gem_new_vram(struct drm_device *dev, struct drm_file *file,
 			 u32 size, u32 flags, u32 *handle)
