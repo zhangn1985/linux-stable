@@ -46,6 +46,15 @@ struct etnaviv_drm_private {
 	struct xarray active_contexts;
 	u32 next_context_id;
 
+	/*
+	 * If true, the cached mapping is consistent for all CPU cores and
+	 * peripheral bus masters in the system. It means that both of the
+	 * CPU and GPU will see the same data if the buffer being accessed
+	 * is cached. And the coherency is guaranteed by the host platform
+	 * specific hardwares.
+	 */
+	bool cached_coherent;
+
 	/* list of GEM objects: */
 	struct mutex gem_lock;
 	struct list_head gem_list;
