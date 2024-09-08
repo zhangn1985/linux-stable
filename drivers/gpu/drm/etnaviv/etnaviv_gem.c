@@ -584,7 +584,7 @@ void etnaviv_gem_free_object(struct drm_gem_object *obj)
 	kfree(etnaviv_obj);
 }
 
-void etnaviv_gem_obj_add(struct drm_device *dev, struct drm_gem_object *obj)
+static void etnaviv_gem_obj_add(struct drm_device *dev, struct drm_gem_object *obj)
 {
 	struct etnaviv_drm_private *priv = to_etnaviv_priv(dev);
 	struct etnaviv_gem_object *etnaviv_obj = to_etnaviv_bo(obj);
@@ -719,8 +719,6 @@ int etnaviv_gem_new_handle(struct drm_device *dev, struct drm_file *file,
 	 */
 	mapping_set_gfp_mask(obj->filp->f_mapping, priv->shm_gfp_mask);
 
-	etnaviv_gem_obj_add(dev, obj);
-
 	ret = drm_gem_handle_create(file, obj, handle);
 
 	/* drop reference from allocate - handle holds it now */
@@ -750,6 +748,8 @@ int etnaviv_gem_new_private(struct drm_device *dev, size_t size, u32 flags,
 	} else {
 		drm_gem_private_object_init(dev, obj, size);
 	}
+
+	etnaviv_gem_obj_add(dev, obj);
 
 	*res = to_etnaviv_bo(obj);
 
@@ -848,8 +848,6 @@ int etnaviv_gem_new_userptr(struct drm_device *dev, struct drm_file *file,
 	etnaviv_obj->userptr.ptr = ptr;
 	etnaviv_obj->userptr.mm = current->mm;
 	etnaviv_obj->userptr.ro = !(flags & ETNA_USERPTR_WRITE);
-
-	etnaviv_gem_obj_add(dev, &etnaviv_obj->base);
 
 	ret = drm_gem_handle_create(file, &etnaviv_obj->base, handle);
 
