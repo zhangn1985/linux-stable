@@ -58,6 +58,17 @@ struct etnaviv_drm_private {
 	 */
 	bool cached_coherent;
 
+	/*
+	 * dedicated VRAM (device memory) resource
+	 */
+	struct {
+		struct drm_mm mm;
+		u64 gpu_base;
+		u64 cpu_base;
+		u64 size;
+	} vram;
+	bool dedicated_vram;
+
 	/* list of GEM objects: */
 	struct mutex gem_lock;
 	struct list_head gem_list;

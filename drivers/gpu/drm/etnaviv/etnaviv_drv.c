@@ -23,6 +23,7 @@
 #include "etnaviv_drv.h"
 #include "etnaviv_gpu.h"
 #include "etnaviv_gem.h"
+#include "etnaviv_gem_vram.h"
 #include "etnaviv_mmu.h"
 #include "etnaviv_pci_drv.h"
 #include "etnaviv_perfmon.h"
@@ -46,6 +47,8 @@ static struct device_node *etnaviv_of_first_available_node(void)
 static int etnaviv_private_init(struct device *dev,
 				struct etnaviv_drm_private *priv)
 {
+	int ret;
+
 	xa_init_flags(&priv->active_contexts, XA_FLAGS_ALLOC);
 
 	mutex_init(&priv->gem_lock);
@@ -61,6 +64,10 @@ static int etnaviv_private_init(struct device *dev,
 
 	priv->cached_coherent = dev_is_dma_coherent(dev);
 
+	ret = etnaviv_init_dedicated_vram(dev, priv);
+	if (ret)
+		dev_err(dev, "Failed to init dedicated vram\n");
+
 	return 0;
 }
 
@@ -74,6 +81,11 @@ static void etnaviv_private_fini(struct etnaviv_drm_private *priv)
 	xa_destroy(&priv->active_contexts);
 
 	mutex_destroy(&priv->gem_lock);
+
+	if (priv->dedicated_vram) {
+		drm_mm_takedown(&priv->vram.mm);
+		priv->dedicated_vram = false;
+	}
 }
 
 static void load_gpu(struct drm_device *dev)

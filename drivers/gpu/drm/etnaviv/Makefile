@@ -6,6 +6,7 @@ etnaviv-y := \
 	etnaviv_drv.o \
 	etnaviv_dump.o \
 	etnaviv_gem_prime.o \
+	etnaviv_gem_vram.o \
 	etnaviv_gem_submit.o \
 	etnaviv_gem.o \
 	etnaviv_gpu.o \

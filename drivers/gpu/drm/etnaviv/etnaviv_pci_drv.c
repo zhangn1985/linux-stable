@@ -191,6 +191,19 @@ static struct pci_driver etnaviv_pci_driver = {
 	.remove = etnaviv_pci_remove,
 };
 
+const struct etnaviv_pci_gpu_data *
+etnaviv_pci_get_match_data(struct device *dev)
+{
+	struct pci_dev *pdev = to_pci_dev(dev);
+	const struct pci_device_id *entity;
+
+	entity = pci_match_id(etnaviv_pci_id_list, pdev);
+	if (!entity)
+		return NULL;
+
+	return etnaviv_pci_get_platform_data(entity);
+}
+
 int etnaviv_register_pci_driver(void)
 {
 	return pci_register_driver(&etnaviv_pci_driver);

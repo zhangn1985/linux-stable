@@ -42,6 +42,9 @@ struct etnaviv_pci_gpu_data {
 	char market_name[24];
 };
 
+const struct etnaviv_pci_gpu_data *
+etnaviv_pci_get_match_data(struct device *dev);
+
 int etnaviv_register_pci_driver(void);
 void etnaviv_unregister_pci_driver(void);
 
@@ -51,6 +54,9 @@ int jemo_pcie_init(struct pci_dev *pdev);
 
 static inline int etnaviv_register_pci_driver(void) { return 0; }
 static inline void etnaviv_unregister_pci_driver(void) { }
+
+static inline struct etnaviv_pci_gpu_data *
+etnaviv_pci_get_match_data(struct device *dev) { return NULL; }
 
 #endif
 

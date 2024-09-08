@@ -59,6 +59,9 @@ struct etnaviv_gem_object {
 	u32 last_cpu_prep_op;
 
 	struct etnaviv_gem_userptr userptr;
+
+	/* dedicated vram, which is physically contiguous */
+	struct drm_mm_node *vram_np;
 };
 
 static inline
@@ -128,5 +131,7 @@ struct etnaviv_vram_mapping *etnaviv_gem_mapping_get(
 	struct drm_gem_object *obj, struct etnaviv_iommu_context *mmu_context,
 	u64 va);
 void etnaviv_gem_mapping_unreference(struct etnaviv_vram_mapping *mapping);
+
+u64 etnaviv_obj_gpu_phys_addr(struct etnaviv_gem_object *etnaviv_obj);
 
 #endif /* __ETNAVIV_GEM_H__ */
