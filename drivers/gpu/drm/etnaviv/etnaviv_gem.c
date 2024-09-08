@@ -6,6 +6,7 @@
 #include <drm/drm_gem.h>
 #include <drm/drm_prime.h>
 #include <linux/dma-mapping.h>
+#include <linux/iosys-map.h>
 #include <linux/shmem_fs.h>
 #include <linux/spinlock.h>
 #include <linux/vmalloc.h>
@@ -340,6 +341,19 @@ void *etnaviv_gem_vmap(struct drm_gem_object *obj)
 	return etnaviv_obj->vaddr;
 }
 
+static int etnaviv_gem_object_vmap(struct drm_gem_object *obj,
+				   struct iosys_map *map)
+{
+	void *vaddr;
+
+	vaddr = etnaviv_gem_vmap(obj);
+	if (!vaddr)
+		return -ENOMEM;
+	iosys_map_set_vaddr(map, vaddr);
+
+	return 0;
+}
+
 void etnaviv_gem_vunmap(struct drm_gem_object *obj)
 {
 	struct etnaviv_gem_object *etnaviv_obj = to_etnaviv_bo(obj);
@@ -595,7 +609,7 @@ static const struct drm_gem_object_funcs etnaviv_gem_object_funcs = {
 	.pin = etnaviv_gem_prime_pin,
 	.unpin = etnaviv_gem_prime_unpin,
 	.get_sg_table = etnaviv_gem_prime_get_sg_table,
-	.vmap = etnaviv_gem_prime_vmap,
+	.vmap = etnaviv_gem_object_vmap,
 	.vunmap = etnaviv_gem_object_vunmap,
 	.mmap = etnaviv_gem_mmap,
 	.vm_ops = &vm_ops,

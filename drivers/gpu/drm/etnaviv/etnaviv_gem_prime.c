@@ -25,18 +25,6 @@ struct sg_table *etnaviv_gem_prime_get_sg_table(struct drm_gem_object *obj)
 	return drm_prime_pages_to_sg(obj->dev, etnaviv_obj->pages, npages);
 }
 
-int etnaviv_gem_prime_vmap(struct drm_gem_object *obj, struct iosys_map *map)
-{
-	void *vaddr;
-
-	vaddr = etnaviv_gem_vmap(obj);
-	if (!vaddr)
-		return -ENOMEM;
-	iosys_map_set_vaddr(map, vaddr);
-
-	return 0;
-}
-
 int etnaviv_gem_prime_pin(struct drm_gem_object *obj)
 {
 	if (!obj->import_attach) {
