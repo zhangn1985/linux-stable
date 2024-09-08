@@ -19,6 +19,8 @@
 static struct lock_class_key etnaviv_shm_lock_class;
 static struct lock_class_key etnaviv_userptr_lock_class;
 
+static void etnaviv_gem_obj_remove(struct drm_gem_object *obj);
+
 static void etnaviv_gem_scatter_map(struct etnaviv_gem_object *etnaviv_obj)
 {
 	struct drm_device *dev = etnaviv_obj->base.dev;
@@ -555,15 +557,12 @@ void etnaviv_gem_free_object(struct drm_gem_object *obj)
 {
 	struct drm_device *drm = obj->dev;
 	struct etnaviv_gem_object *etnaviv_obj = to_etnaviv_bo(obj);
-	struct etnaviv_drm_private *priv = obj->dev->dev_private;
 	struct etnaviv_vram_mapping *mapping, *tmp;
 
 	/* object should not be active */
 	drm_WARN_ON(drm, is_active(etnaviv_obj));
 
-	mutex_lock(&priv->gem_lock);
-	list_del(&etnaviv_obj->gem_node);
-	mutex_unlock(&priv->gem_lock);
+	etnaviv_gem_obj_remove(obj);
 
 	list_for_each_entry_safe(mapping, tmp, &etnaviv_obj->vram_list,
 				 obj_node) {
@@ -592,6 +591,16 @@ void etnaviv_gem_obj_add(struct drm_device *dev, struct drm_gem_object *obj)
 
 	mutex_lock(&priv->gem_lock);
 	list_add_tail(&etnaviv_obj->gem_node, &priv->gem_list);
+	mutex_unlock(&priv->gem_lock);
+}
+
+static void etnaviv_gem_obj_remove(struct drm_gem_object *obj)
+{
+	struct etnaviv_drm_private *priv = to_etnaviv_priv(obj->dev);
+	struct etnaviv_gem_object *etnaviv_obj = to_etnaviv_bo(obj);
+
+	mutex_lock(&priv->gem_lock);
+	list_del(&etnaviv_obj->gem_node);
 	mutex_unlock(&priv->gem_lock);
 }
 
