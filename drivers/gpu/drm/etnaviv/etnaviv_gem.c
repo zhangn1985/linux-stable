@@ -340,6 +340,25 @@ void *etnaviv_gem_vmap(struct drm_gem_object *obj)
 	return etnaviv_obj->vaddr;
 }
 
+void etnaviv_gem_vunmap(struct drm_gem_object *obj)
+{
+	struct etnaviv_gem_object *etnaviv_obj = to_etnaviv_bo(obj);
+
+	if (!etnaviv_obj->vaddr)
+		return;
+
+	mutex_lock(&etnaviv_obj->lock);
+	etnaviv_obj->ops->vunmap(etnaviv_obj);
+	etnaviv_obj->vaddr = NULL;
+	mutex_unlock(&etnaviv_obj->lock);
+}
+
+static void etnaviv_gem_object_vunmap(struct drm_gem_object *obj,
+				      struct iosys_map *map)
+{
+	etnaviv_gem_vunmap(obj);
+}
+
 static void *etnaviv_gem_vmap_impl(struct etnaviv_gem_object *obj)
 {
 	struct page **pages;
@@ -471,14 +490,21 @@ void etnaviv_gem_describe_objects(struct etnaviv_drm_private *priv,
 
 static void etnaviv_gem_shmem_release(struct etnaviv_gem_object *etnaviv_obj)
 {
-	vunmap(etnaviv_obj->vaddr);
 	put_pages(etnaviv_obj);
+}
+
+static void etnaviv_gem_shmem_vunmap(struct etnaviv_gem_object *etnaviv_obj)
+{
+	lockdep_assert_held(&etnaviv_obj->lock);
+
+	vunmap(etnaviv_obj->vaddr);
 }
 
 static const struct etnaviv_gem_ops etnaviv_gem_shmem_ops = {
 	.get_pages = etnaviv_gem_shmem_get_pages,
 	.release = etnaviv_gem_shmem_release,
 	.vmap = etnaviv_gem_vmap_impl,
+	.vunmap = etnaviv_gem_shmem_vunmap,
 	.mmap = etnaviv_gem_mmap_obj,
 };
 
@@ -508,6 +534,7 @@ void etnaviv_gem_free_object(struct drm_gem_object *obj)
 		kfree(mapping);
 	}
 
+	etnaviv_obj->ops->vunmap(etnaviv_obj);
 	etnaviv_obj->ops->release(etnaviv_obj);
 	drm_gem_object_release(obj);
 
@@ -569,6 +596,7 @@ static const struct drm_gem_object_funcs etnaviv_gem_object_funcs = {
 	.unpin = etnaviv_gem_prime_unpin,
 	.get_sg_table = etnaviv_gem_prime_get_sg_table,
 	.vmap = etnaviv_gem_prime_vmap,
+	.vunmap = etnaviv_gem_object_vunmap,
 	.mmap = etnaviv_gem_mmap,
 	.vm_ops = &vm_ops,
 };
@@ -723,6 +751,13 @@ static void etnaviv_gem_userptr_release(struct etnaviv_gem_object *etnaviv_obj)
 	}
 }
 
+static void etnaviv_gem_userptr_vunmap(struct etnaviv_gem_object *etnaviv_obj)
+{
+	lockdep_assert_held(&etnaviv_obj->lock);
+
+	vunmap(etnaviv_obj->vaddr);
+}
+
 static int etnaviv_gem_userptr_mmap_obj(struct etnaviv_gem_object *etnaviv_obj,
 		struct vm_area_struct *vma)
 {
@@ -733,6 +768,7 @@ static const struct etnaviv_gem_ops etnaviv_gem_userptr_ops = {
 	.get_pages = etnaviv_gem_userptr_get_pages,
 	.release = etnaviv_gem_userptr_release,
 	.vmap = etnaviv_gem_vmap_impl,
+	.vunmap = etnaviv_gem_userptr_vunmap,
 	.mmap = etnaviv_gem_userptr_mmap_obj,
 };
 
