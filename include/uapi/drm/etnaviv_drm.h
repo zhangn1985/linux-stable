@@ -99,6 +99,18 @@ struct drm_etnaviv_param {
 /* map flags */
 #define ETNA_BO_FORCE_MMU    0x00100000
 
+/* domain (placement) flags */
+#define ETNA_BO_DOMAIN_MASK  0x00f00000
+
+/* CPU accessible, GPU accessible pages in dedicated VRAM */
+#define ETNA_BO_PL_VRAM      0x01000000
+/* CPU accessible, GPU accessible pages in SHMEM */
+#define ETNA_BO_PL_GTT       0x02000000
+/* Userspace allocated memory, at least CPU accessible */
+#define ETNA_BO_PL_USERPTR   0x08000000
+/* GPU accessible but CPU not accessible private VRAM pages */
+#define ETNA_BO_PL_PRIV      0x04000000
+
 struct drm_etnaviv_gem_new {
 	__u64 size;           /* in */
 	__u32 flags;          /* in, mask of ETNA_BO_x */
