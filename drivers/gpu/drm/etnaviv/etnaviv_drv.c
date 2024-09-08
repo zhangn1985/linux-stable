@@ -24,6 +24,7 @@
 #include "etnaviv_gpu.h"
 #include "etnaviv_gem.h"
 #include "etnaviv_mmu.h"
+#include "etnaviv_pci_drv.h"
 #include "etnaviv_perfmon.h"
 
 /*
@@ -568,6 +569,10 @@ static int etnaviv_bind(struct device *dev)
 	if (ret < 0)
 		goto out_free_priv;
 
+	ret = etnaviv_register_irq_handler(dev, priv);
+	if (ret)
+		goto out_unbind;
+
 	load_gpu(drm);
 
 	ret = drm_dev_register(drm, 0);
@@ -670,15 +675,31 @@ static struct platform_driver etnaviv_platform_driver = {
 	},
 };
 
-static int etnaviv_create_platform_device(const char *name,
-					  struct platform_device **ppdev)
+int etnaviv_create_platform_device(struct device *parent,
+				   const char *name, int id,
+				   struct resource *pres,
+				   void *pdata, unsigned int ndata,
+				   struct platform_device **ppdev)
 {
 	struct platform_device *pdev;
 	int ret;
 
-	pdev = platform_device_alloc(name, PLATFORM_DEVID_NONE);
+	pdev = platform_device_alloc(name, id);
 	if (!pdev)
 		return -ENOMEM;
+
+	pdev->dev.parent = parent;
+
+	if (pres) {
+		ret = platform_device_add_resources(pdev, pres, 1);
+		if (ret) {
+			platform_device_put(pdev);
+			return ret;
+		}
+	}
+
+	if (pdata && ndata)
+		platform_device_add_data(pdev, pdata, ndata);
 
 	ret = platform_device_add(pdev);
 	if (ret) {
@@ -691,7 +712,7 @@ static int etnaviv_create_platform_device(const char *name,
 	return 0;
 }
 
-static void etnaviv_destroy_platform_device(struct platform_device **ppdev)
+void etnaviv_destroy_platform_device(struct platform_device **ppdev)
 {
 	struct platform_device *pdev = *ppdev;
 
@@ -703,7 +724,7 @@ static void etnaviv_destroy_platform_device(struct platform_device **ppdev)
 	*ppdev = NULL;
 }
 
-static struct platform_device *etnaviv_drm;
+struct platform_device *etnaviv_drm;
 
 static int __init etnaviv_init(void)
 {
@@ -720,6 +741,10 @@ static int __init etnaviv_init(void)
 	if (ret != 0)
 		goto unregister_gpu_driver;
 
+	ret = etnaviv_register_pci_driver();
+	if (ret)
+		goto unregister_platform_driver;
+
 	/*
 	 * If the DT contains at least one available GPU device, instantiate
 	 * the DRM platform device.
@@ -728,13 +753,18 @@ static int __init etnaviv_init(void)
 	if (np) {
 		of_node_put(np);
 
-		ret = etnaviv_create_platform_device("etnaviv", &etnaviv_drm);
+		ret = etnaviv_create_platform_device(NULL, "etnaviv",
+						     PLATFORM_DEVID_NONE,
+						     NULL, NULL, 0,
+						     &etnaviv_drm);
 		if (ret)
-			goto unregister_platform_driver;
+			goto unregister_pci_driver;
 	}
 
 	return 0;
 
+unregister_pci_driver:
+	etnaviv_unregister_pci_driver();
 unregister_platform_driver:
 	platform_driver_unregister(&etnaviv_platform_driver);
 unregister_gpu_driver:
@@ -746,6 +776,7 @@ module_init(etnaviv_init);
 static void __exit etnaviv_exit(void)
 {
 	etnaviv_destroy_platform_device(&etnaviv_drm);
+	etnaviv_unregister_pci_driver();
 	platform_driver_unregister(&etnaviv_platform_driver);
 	platform_driver_unregister(&etnaviv_gpu_driver);
 }
