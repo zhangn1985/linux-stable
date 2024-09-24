@@ -3855,7 +3855,7 @@ static int marlin_probe(struct platform_device *pdev)
 	return 0;
 }
 
-static int  marlin_remove(struct platform_device *pdev)
+static void marlin_remove(struct platform_device *pdev)
 {
 #if (defined(CONFIG_BT_WAKE_HOST_EN) && defined(CONFIG_AW_BOARD))
 	marlin_unregistsr_bt_wake();
@@ -3895,8 +3895,6 @@ static int  marlin_remove(struct platform_device *pdev)
 	devm_kfree(&pdev->dev, marlin_dev);
 
 	WCN_INFO("marlin_remove ok!\n");
-
-	return 0;
 }
 
 static void marlin_shutdown(struct platform_device *pdev)

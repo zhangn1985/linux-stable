@@ -52,9 +52,6 @@ static int buf_list_check(struct buffer_pool_t *pool,
 		return 0;
 	for (i = 0, mbuf = head; i < num; i++) {
 		if ((i == (num - 1)) && (mbuf != tail)) {
-			pr_err("%s(0x%lx, 0x%lx, %d), err 1\n", __func__,
-				(unsigned long)virt_to_phys(head),
-				(unsigned long)virt_to_phys(tail), num);
 			WARN_ON(1);
 		}
 		WARN_ON(!mbuf);
@@ -65,9 +62,6 @@ static int buf_list_check(struct buffer_pool_t *pool,
 	}
 
 	if (tail->next != NULL) {
-		pr_err("%s(0x%lx, 0x%lx, %d), err 2\n", __func__,
-			(unsigned long)virt_to_phys(head),
-			(unsigned long)virt_to_phys(tail), num);
 		WARN_ON(1);
 	}
 
@@ -205,9 +199,6 @@ int buf_list_free(int chn, struct mbuf_t *head, struct mbuf_t *tail, int num)
 	struct chn_info_t *chn_inf = chn_info();
 
 	if ((head == NULL) || (tail == NULL) || (num == 0)) {
-		pr_err("%s(%d, 0x%lx, 0x%lx, %d)\n", __func__, chn,
-			(unsigned long)virt_to_phys(head),
-			(unsigned long)virt_to_phys(tail), num);
 		return -1;
 	}
 
