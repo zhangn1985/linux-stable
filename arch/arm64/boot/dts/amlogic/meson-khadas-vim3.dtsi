@@ -9,6 +9,7 @@
 #include <dt-bindings/leds/common.h>
 #include <dt-bindings/gpio/meson-g12a-gpio.h>
 #include <dt-bindings/sound/meson-g12a-tohdmitx.h>
+#include <dt-bindings/media/rc-proto.h>
 
 / {
 	aliases {
@@ -245,6 +246,35 @@
 		clock-frequency = <32768>;
 		pwms = <&pwm_ef 0 30518 0>; /* PWM_E at 32.768KHz */
 	};
+
+	keymap {
+		compatible = "simple-keymap";
+		proto = <RC_PROTO_NEC>;
+		rc-scancode =  /bits/ 64 < 0x14				
+				 0x03
+				 0x02
+				 0x0e
+				 0x1a 
+				 0x07 
+				 0x01 
+				 0x5b 
+				 0x13 
+				 0x58 
+				 0x0b 
+				 0x48 >;
+		rc-keycode = < KEY_POWER
+				KEY_UP
+				KEY_DOWN
+				KEY_LEFT
+				KEY_RIGHT
+				KEY_OK
+				KEY_BACK
+				KEY_MUTE
+				KEY_MENU
+				KEY_VOLUMEDOWN
+				KEY_VOLUMEUP
+				KEY_HOME >;
+	};
 };
 
 &arb {
@@ -362,7 +392,7 @@
 	status = "okay";
 	pinctrl-0 = <&remote_input_ao_pins>;
 	pinctrl-names = "default";
-	linux,rc-map-name = "rc-khadas";
+	linux,rc-map-name = "rc-simple";
 };
 
 &pcie {
