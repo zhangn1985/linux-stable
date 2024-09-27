@@ -141,3 +141,7 @@ obj-$(CONFIG_RC_MAP) += \
 			rc-xbox-360.o \
 			rc-xbox-dvd.o \
 			rc-zx-irdec.o
+
+ifdef CONFIG_OF
+obj-$(CONFIG_RC_MAP) +=	rc-simple.o
+endif
