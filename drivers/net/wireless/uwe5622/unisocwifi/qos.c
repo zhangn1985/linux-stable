@@ -568,7 +568,7 @@ void reset_wmmac_parameters(struct sprdwl_priv *priv)
 		g_wmmac_admittedtime[ac] = 0;
 	}
 	if (timer_pending(&priv->wmmac.wmmac_edcaf_timer))
-		del_timer_sync(&priv->wmmac.wmmac_edcaf_timer);
+		timer_delete_sync(&priv->wmmac.wmmac_edcaf_timer);
 
 	memset(&priv->wmmac.ac[0], 0, 4*sizeof(struct wmm_ac_params));
 }
@@ -691,7 +691,7 @@ void update_admitted_time(struct sprdwl_priv *priv, u8 tsid, u16 medium_time, bo
 		else {
 			g_wmmac_admittedtime[ac] = 0;
 			if (timer_pending(&priv->wmmac.wmmac_edcaf_timer))
-				del_timer_sync(&priv->wmmac.wmmac_edcaf_timer);
+				timer_delete_sync(&priv->wmmac.wmmac_edcaf_timer);
 		}
 	}
 

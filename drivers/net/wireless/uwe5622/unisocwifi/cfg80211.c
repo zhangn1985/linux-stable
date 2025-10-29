@@ -1255,7 +1255,7 @@ void sprdwl_cancel_scan(struct sprdwl_vif *vif)
 
 	if (priv->scan_vif && priv->scan_vif == vif) {
 		if (timer_pending(&priv->scan_timer))
-			del_timer_sync(&priv->scan_timer);
+			timer_delete_sync(&priv->scan_timer);
 
 		spin_lock_bh(&priv->scan_lock);
 
@@ -1315,7 +1315,7 @@ void sprdwl_scan_done(struct sprdwl_vif *vif, bool abort)
 
 	if (priv->scan_vif && priv->scan_vif == vif) {
 		if (timer_pending(&priv->scan_timer))
-			del_timer_sync(&priv->scan_timer);
+			timer_delete_sync(&priv->scan_timer);
 
 		spin_lock_bh(&priv->scan_lock);
 		if (priv->scan_request) {
