@@ -750,7 +750,7 @@ static int dw_hdmi_rockchip_bind(struct device *dev, struct device *master,
 	if (!np)
 		return -ENODEV;
 
-	hdmi = devm_kzalloc(&pdev->dev, sizeof(*hdmi), GFP_KERNEL);
+	hdmi = devm_drm_bridge_alloc(&pdev->dev, struct rockchip_hdmi, bridge, &dw_hdmi_rockchip_bridge_funcs);
 	if (!hdmi)
 		return -ENOMEM;
 
@@ -816,7 +816,6 @@ static int dw_hdmi_rockchip_bind(struct device *dev, struct device *master,
 		goto err_disable_clk;
 	}
 
-	hdmi->bridge.funcs = &dw_hdmi_rockchip_bridge_funcs;
 	drm_bridge_attach(encoder, &hdmi->bridge, NULL, 0);
 
 	platform_set_drvdata(pdev, hdmi);
