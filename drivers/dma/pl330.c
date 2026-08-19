@@ -2312,7 +2312,6 @@ static int pl330_terminate_all(struct dma_chan *chan)
 	spin_unlock_irqrestore(&pch->lock, flags);
 	if (power_down)
 		pm_runtime_put_autosuspend(pl330->ddma.dev);
-	pm_runtime_put_autosuspend(pl330->ddma.dev);
 
 	return 0;
 }
