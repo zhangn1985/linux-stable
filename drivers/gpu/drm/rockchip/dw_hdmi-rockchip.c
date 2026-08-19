@@ -815,7 +815,7 @@ static int dw_hdmi_rockchip_bind(struct device *dev, struct device *master,
 		DRM_DEV_ERROR(hdmi->dev, "Failed to init encoder: %d\n", ret);
 		goto err_disable_clk;
 	}
-
+	devm_drm_bridge_add(&pdev->dev, &hdmi->bridge);
 	drm_bridge_attach(encoder, &hdmi->bridge, NULL, 0);
 
 	platform_set_drvdata(pdev, hdmi);
