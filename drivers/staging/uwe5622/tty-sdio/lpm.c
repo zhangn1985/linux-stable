@@ -25,20 +25,26 @@
 #endif
 
 struct proc_dir_entry *bluetooth_dir, *sleep_dir;
+#ifdef CONFIG_PM_SLEEP
 struct wakeup_source *tx_ws;
 struct wakeup_source *rx_ws;
+#endif
 
 void host_wakeup_bt(void)
 {
+#ifdef CONFIG_PM_SLEEP
 	__pm_stay_awake(tx_ws);
+#endif
 	marlin_set_sleep(MARLIN_BLUETOOTH, FALSE);
 	marlin_set_wakeup(MARLIN_BLUETOOTH);
 }
 
 void bt_wakeup_host(void)
 {
+#ifdef CONFIG_PM_SLEEP
 	__pm_relax(tx_ws);
 	__pm_wakeup_event(rx_ws, jiffies_to_msecs(HZ * 5));
+#endif
 }
 
 static ssize_t bluesleep_write_proc_btwrite(struct file *file,
@@ -55,7 +61,9 @@ static ssize_t bluesleep_write_proc_btwrite(struct file *file,
 		host_wakeup_bt();
 	else if (b == '2') {
 		marlin_set_sleep(MARLIN_BLUETOOTH, TRUE);
+#ifdef CONFIG_PM_SLEEP
 		__pm_relax(tx_ws);
+#endif
 	} else
 		pr_err("bludroid pass a unsupport parameter");
 	return count;
@@ -109,16 +117,20 @@ int  bluesleep_init(void)
 		retval = -ENOMEM;
 		goto fail;
 	}
+#ifdef CONFIG_PM_SLEEP
 	tx_ws = wakeup_source_register(NULL, "BT_TX_wakelock");
 	rx_ws = wakeup_source_register(NULL, "BT_RX_wakelock");
+#endif
 	return 0;
 
 fail:
 	remove_proc_entry("btwrite", sleep_dir);
 	remove_proc_entry("sleep", bluetooth_dir);
 	remove_proc_entry("bluetooth", 0);
+#ifdef CONFIG_PM_SLEEP
 	wakeup_source_unregister(tx_ws);
 	wakeup_source_unregister(rx_ws);
+#endif
 	return retval;
 }
 
@@ -128,8 +140,10 @@ void  bluesleep_exit(void)
 	remove_proc_entry("btwrite", sleep_dir);
 	remove_proc_entry("sleep", bluetooth_dir);
 	remove_proc_entry("bluetooth", 0);
+#ifdef CONFIG_PM_SLEEP
 	wakeup_source_unregister(tx_ws);
 	wakeup_source_unregister(rx_ws);
+#endif
 }
 
 /*module_init(bluesleep_init);*/

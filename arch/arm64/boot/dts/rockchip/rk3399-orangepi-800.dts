@@ -197,7 +197,7 @@
 
 	unisoc_uwe_bsp: uwe-bsp {
 		compatible = "unisoc,uwe_bsp";
-			wl-reg-on-gpios = <&gpio0 RK_PB2 GPIO_ACTIVE_HIGH>;
+			//wl-reg-on-gpios = <&gpio0 RK_PB2 GPIO_ACTIVE_HIGH>;
 			bt-reg-on-gpios = <&gpio0 RK_PB1 GPIO_ACTIVE_HIGH>;
 			wl-wake-host-gpios = <&gpio0 RK_PA3 GPIO_ACTIVE_HIGH>;
 			bt-wake-host-gpios = <&gpio0 RK_PA4 GPIO_ACTIVE_HIGH>;

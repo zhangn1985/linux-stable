@@ -301,12 +301,13 @@ struct sdiohal_data_t {
 	struct task_struct *rx_thread;
 	struct completion tx_completed;
 	struct completion rx_completed;
+#ifdef CONFIG_PM_SLEEP
 	/*wakeup_source pointer*/
 	struct wakeup_source *tx_ws;
 	struct wakeup_source *rx_ws;
-
 	atomic_t tx_wake_flag;
 	atomic_t rx_wake_flag;
+#endif
 #ifdef CONFIG_WCN_SLP
 	atomic_t tx_wake_cp_count[SUBSYS_MAX];
 	atomic_t rx_wake_cp_count[SUBSYS_MAX];
@@ -371,8 +372,10 @@ struct sdiohal_data_t {
 	struct timespec tm_begin_irq;
 	struct timespec tm_end_irq;
 
+#ifdef CONFIG_PM_SLEEP
 	/*wakeup_source pointer*/
 	struct wakeup_source *scan_ws;
+#endif
 
 	struct completion scan_done;
 	struct completion remove_done;

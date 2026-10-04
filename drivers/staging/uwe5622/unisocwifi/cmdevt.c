@@ -50,7 +50,10 @@ struct sprdwl_cmd {
 	/* mutex for command */
 	struct mutex cmd_lock;
 	/* wake_lock for command */
+#ifdef CONFIG_PM_SLEEP
+	/* wake_lock for command */
 	struct wakeup_source *wake_lock;
+#endif
 	/*complettion for command*/
 	struct completion completed;
 };
@@ -253,6 +256,7 @@ int sprdwl_cmd_init(void)
 	struct sprdwl_cmd *cmd = &g_sprdwl_cmd;
 	/* memset(cmd, 0, sizeof(*cmd)); */
 	cmd->data = NULL;
+#ifdef CONFIG_PM_SLEEP
 #ifdef CONFIG_WIFI_RK_PM_PRIVATE_API
 	cmd->wake_lock = wakeup_source_register(sprdwl_dev,
 						"Wi-Fi_cmd_wakelock");
@@ -267,6 +271,7 @@ int sprdwl_cmd_init(void)
 		wl_err("%s wakeup source register error.\n", __func__);
 		return -EINVAL;
 	}
+#endif
 
 #ifdef CP2_RESET_SUPPORT
 	if (atomic_read(&cmd->refcnt) >= SPRDWL_CMD_EXIT_VAL)
@@ -333,8 +338,10 @@ void sprdwl_cmd_deinit(void)
 	}
 	sprdwl_cmd_clean(cmd);
 	mutex_destroy(&cmd->cmd_lock);
+#ifdef CONFIG_PM_SLEEP
 	if (cmd->wake_lock)
 		wakeup_source_unregister(cmd->wake_lock);
+#endif
 #ifdef CP2_RESET_SUPPORT
 	cmd->init_ok = 0;
 #endif
@@ -358,8 +365,10 @@ static int sprdwl_cmd_lock(struct sprdwl_cmd *cmd)
 		return -1;
 	}
 	mutex_lock(&cmd->cmd_lock);
+#ifdef CONFIG_PM_SLEEP
 	if (intf->priv->is_suspending == 0)
 		__pm_stay_awake(cmd->wake_lock);
+#endif
 
 #ifdef UNISOC_WIFI_PS
 	if (SPRDWL_PS_SUSPENDED == intf->suspend_mode) {
@@ -385,8 +394,10 @@ static void sprdwl_cmd_unlock(struct sprdwl_cmd *cmd)
 
 	mutex_unlock(&cmd->cmd_lock);
 	atomic_dec(&cmd->refcnt);
+#ifdef CONFIG_PM_SLEEP
 	if (intf->priv->is_suspending == 0)
 		__pm_relax(cmd->wake_lock);
+#endif
 	if (intf->priv->is_suspending == 1)
 		intf->priv->is_suspending = 0;
 }

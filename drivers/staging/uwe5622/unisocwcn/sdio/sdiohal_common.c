@@ -193,6 +193,7 @@ void sdiohal_completion_init(void)
 
 void sdiohal_lock_tx_ws(void)
 {
+#ifdef CONFIG_PM_SLEEP
 	struct sdiohal_data_t *p_data = sdiohal_get_data();
 
 	if (atomic_read(&p_data->flag_suspending))
@@ -203,10 +204,12 @@ void sdiohal_lock_tx_ws(void)
 		return;
 
 	__pm_stay_awake(p_data->tx_ws);
+#endif
 }
 
 void sdiohal_unlock_tx_ws(void)
 {
+#ifdef CONFIG_PM_SLEEP
 	struct sdiohal_data_t *p_data = sdiohal_get_data();
 
 	sdiohal_atomic_sub(1, &p_data->tx_wake_flag);
@@ -214,10 +217,12 @@ void sdiohal_unlock_tx_ws(void)
 		return;
 
 	__pm_relax(p_data->tx_ws);
+#endif
 }
 
 void sdiohal_lock_rx_ws(void)
 {
+#ifdef CONFIG_PM_SLEEP
 	struct sdiohal_data_t *p_data = sdiohal_get_data();
 
 	if (atomic_read(&p_data->flag_suspending) ||
@@ -226,10 +231,12 @@ void sdiohal_lock_rx_ws(void)
 
 	atomic_set(&p_data->rx_wake_flag, 1);
 	__pm_stay_awake(p_data->rx_ws);
+#endif
 }
 
 void sdiohal_unlock_rx_ws(void)
 {
+#ifdef CONFIG_PM_SLEEP
 	struct sdiohal_data_t *p_data = sdiohal_get_data();
 
 	if (!atomic_read(&p_data->rx_wake_flag))
@@ -237,36 +244,45 @@ void sdiohal_unlock_rx_ws(void)
 
 	atomic_set(&p_data->rx_wake_flag, 0);
 	__pm_relax(p_data->rx_ws);
+#endif
 }
 
 void sdiohal_lock_scan_ws(void)
 {
+#ifdef CONFIG_PM_SLEEP
 	struct sdiohal_data_t *p_data = sdiohal_get_data();
 	__pm_stay_awake(p_data->scan_ws);
+#endif
 }
 
 void sdiohal_unlock_scan_ws(void)
 {
+#ifdef CONFIG_PM_SLEEP
 	struct sdiohal_data_t *p_data = sdiohal_get_data();
 	__pm_relax(p_data->scan_ws);
+#endif
 }
 
 void sdiohal_wakelock_init(void)
 {
+#ifdef CONFIG_PM_SLEEP
 	struct sdiohal_data_t *p_data = sdiohal_get_data();
 	/*wakeup_source pointer*/
 	p_data->tx_ws = wakeup_source_register(NULL, "sdiohal_tx_wakelock");
 	p_data->rx_ws = wakeup_source_register(NULL, "sdiohal_rx_wakelock");
 	p_data->scan_ws = wakeup_source_register(NULL, "sdiohal_scan_wakelock");
+#endif
 }
 
 void sdiohal_wakelock_deinit(void)
 {
+#ifdef CONFIG_PM_SLEEP
 	struct sdiohal_data_t *p_data = sdiohal_get_data();
 	/*wakeup_source pointer*/
 	wakeup_source_unregister(p_data->tx_ws);
 	wakeup_source_unregister(p_data->rx_ws);
 	wakeup_source_unregister(p_data->scan_ws);
+#endif
 }
 
 /* for callback */

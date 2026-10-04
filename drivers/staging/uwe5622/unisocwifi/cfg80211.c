@@ -3966,7 +3966,11 @@ struct sprdwl_priv *sprdwl_core_create(enum sprdwl_hw_type type,
 	int ret = 0;
 
 	sprdwl_check_intf_ops(ops);
-	sprdwl_cmd_init();
+	ret = sprdwl_cmd_init();
+	if (ret) {
+		wl_err("sprdwl_cmd_init failed: %d\n", ret);
+		return NULL;
+	}
 
 	wiphy = wiphy_new(&sprdwl_cfg80211_ops, sizeof(*priv));
 	if (!wiphy) {
