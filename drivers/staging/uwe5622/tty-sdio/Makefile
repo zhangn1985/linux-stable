@@ -1,7 +1,7 @@
 # ccflags-y += -DDEBUG
 # ccflags-y += -DKERNEL_VERSION_414
 ifeq ($(CONFIG_RK_WIFI_DEVICE_UWE5622),y)
-ccflags-y += -I$(srctree)/drivers/net/wireless/uwe5622/sprdwcn/include
+ccflags-y += -I$(srctree)/drivers/staging/uwe5622/sprdwcn/include
 endif
 #ccflags-y += -DOTT_UWE
 ccflags-y += -Wno-implicit-fallthrough
