@@ -1,3 +1,5 @@
+#include <linux/timer.h>
+
 /*
  * Copyright (C) 2016 Spreadtrum Communications Inc.
  *
@@ -910,7 +912,8 @@ get_first_seqno_in_buff(struct rx_ba_node_desc *ba_node_desc)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0)
 static void ba_reorder_timeout(struct timer_list *t)
 {
-	struct rx_ba_node *ba_node = from_timer(ba_node, t, reorder_timer);
+	struct rx_ba_node *ba_node = container_of(t, struct rx_ba_node,
+							 reorder_timer);
 #else
 static void ba_reorder_timeout(unsigned long data)
 {

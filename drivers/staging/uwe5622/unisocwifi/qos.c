@@ -1,3 +1,5 @@
+#include <linux/timer.h>
+
 /*
  * Copyright (C) 2016 Spreadtrum Communications Inc.
  *
@@ -700,7 +702,8 @@ void update_admitted_time(struct sprdwl_priv *priv, u8 tsid, u16 medium_time, bo
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0)
 void update_wmmac_edcaftime_timeout(struct timer_list *t)
 {
-	struct sprdwl_priv *priv = from_timer(priv, t, wmmac.wmmac_edcaf_timer);
+	struct sprdwl_priv *priv = container_of(t, struct sprdwl_priv,
+							 wmmac.wmmac_edcaf_timer);
 #else
 void update_wmmac_edcaftime_timeout(unsigned long data)
 {

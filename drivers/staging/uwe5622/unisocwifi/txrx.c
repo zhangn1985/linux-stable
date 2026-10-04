@@ -132,7 +132,7 @@ void sprdwl_rx_send_cmd_process(struct sprdwl_priv *priv, void *data, int len,
 			} else {
 				misc_work->vif = vif;
 				misc_work->id = id;
-				memcpy(misc_work->data, data, len);
+				memcpy((u8 *)misc_work + sizeof(*misc_work), data, len);
 				sprdwl_queue_work(vif->priv, misc_work);
 			}
 			sprdwl_put_vif(vif);

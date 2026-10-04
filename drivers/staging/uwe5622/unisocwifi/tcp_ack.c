@@ -3,6 +3,7 @@
 #include <uapi/linux/ip.h>
 #include <uapi/linux/in.h>
 #include <linux/moduleparam.h>
+#include <linux/timer.h>
 #include <net/tcp.h>
 
 #include "sprdwl.h"
@@ -21,7 +22,7 @@ static void sprdwl_tcp_ack_timeout(unsigned long data)
 	struct sprdwl_tcp_ack_manage *ack_m = NULL;
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0)
-	ack_info = (struct sprdwl_tcp_ack_info *)from_timer(ack_info, t, timer);
+	ack_info = container_of(t, struct sprdwl_tcp_ack_info, timer);
 #else
 	ack_info = (struct sprdwl_tcp_ack_info *)data;
 #endif

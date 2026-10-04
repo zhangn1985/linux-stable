@@ -7,6 +7,7 @@
 #include <linux/skbuff.h>
 #include <linux/list.h>
 #include <linux/atomic.h>
+#include <linux/string.h>
 
 #define TRANSF_UNITS 16
 #define TRANSF_TOTAL 10
@@ -1597,7 +1598,7 @@ static void start_loop_check(void)
 
 	udev = ep->intf->udev;
 	pipe = usb_sndbulkpipe(udev, endpoint->bEndpointAddress);
-	strncpy(buf, loop_check_cmd, strlen(loop_check_cmd));
+	memcpy(buf, loop_check_cmd, strlen(loop_check_cmd));
 	usb_fill_bulk_urb(urb, udev, pipe, buf, strlen(loop_check_cmd) + 1,
 				     loop_check_callback, buf);
 	if (usb_submit_urb(urb, GFP_KERNEL))

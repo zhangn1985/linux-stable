@@ -347,7 +347,7 @@ struct sdiohal_data_t {
 
 	bool flag_init;
 	atomic_t flag_suspending;
-	int gpio_num;
+	struct gpio_desc *gpio_num;
 	unsigned int irq_num;
 	unsigned int irq_trigger_type;
 	atomic_t irq_cnt;

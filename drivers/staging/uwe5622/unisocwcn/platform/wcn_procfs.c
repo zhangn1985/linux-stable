@@ -21,6 +21,7 @@
 #include <linux/proc_fs.h>
 #include <linux/sched.h>
 #include <linux/seq_file.h>
+#include <linux/string.h>
 #include <linux/version.h>
 #include <linux/wait.h>
 #if KERNEL_VERSION(4, 11, 0) <= LINUX_VERSION_CODE
@@ -79,10 +80,6 @@ unsigned char *mdbg_get_at_cmd_buf(void)
 
 void mdbg_assert_interface(char *str)
 {
-	int len = MDBG_ASSERT_SIZE;
-
-	if (strlen(str) <= MDBG_ASSERT_SIZE)
-		len = strlen(str);
 #ifndef CONFIG_SC2342_INTEG
 	if (flag_reset == 1) {
 		WCN_INFO("chip in reset...\n");
@@ -94,8 +91,7 @@ void mdbg_assert_interface(char *str)
 	stop_loopcheck();
 #endif
 
-	memset(mdbg_proc->assert.buf, 0, MDBG_ASSERT_SIZE);
-	strncpy(mdbg_proc->assert.buf, str, len);
+	strscpy_pad(mdbg_proc->assert.buf, str, MDBG_ASSERT_SIZE);
 	WCN_INFO("mdbg_assert_interface:%s\n",
 		(char *)(mdbg_proc->assert.buf));
 
@@ -106,7 +102,7 @@ void mdbg_assert_interface(char *str)
 	mdbg_dump_mem();
 #endif
 	wcnlog_clear_log();
-	mdbg_proc->assert.rcv_len = strlen(str);
+	mdbg_proc->assert.rcv_len = strlen(mdbg_proc->assert.buf);
 	mdbg_proc->fail_count++;
 	complete(&mdbg_proc->assert.completed);
 	wake_up_interruptible(&mdbg_proc->assert.rxwait);

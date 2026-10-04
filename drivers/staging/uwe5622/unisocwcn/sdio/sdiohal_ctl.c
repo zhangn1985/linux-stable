@@ -4,7 +4,8 @@
 #include <linux/irq.h>
 #include <linux/kthread.h>
 #include <linux/mmc/host.h>
-#include <linux/of_gpio.h>
+#include <linux/gpio/consumer.h>
+#include <linux/of.h>
 #include <linux/slab.h>
 #include <linux/uaccess.h>
 #include <linux/version.h>
@@ -736,8 +737,8 @@ static int sdiohal_test_int_init(unsigned char func_tag)
 {
 #ifdef CONFIG_WCN_PARSE_DTS
 	struct device_node *np;
+	struct gpio_desc *pub_gpio;
 #endif
-	unsigned int pub_gpio_num = 0;
 	unsigned char reg_int_en = 0;
 	int ret;
 
@@ -752,23 +753,20 @@ static int sdiohal_test_int_init(unsigned char func_tag)
 		sdiohal_err("dts node not found");
 		return -1;
 	}
-	pub_gpio_num = of_get_named_gpio(np, "int-gpio", 0);
+	pub_gpio = fwnode_gpiod_get_index(of_fwnode_handle(np), "int", 0,
+						 GPIOD_IN, "sdiohal_int_gpio");
+	if (IS_ERR(pub_gpio))
+		return PTR_ERR(pub_gpio);
 #endif
-	sdiohal_info("pub_gpio_num:%d\n", pub_gpio_num);
-	ret = gpio_request(pub_gpio_num, "sdiohal_int_gpio");
+	ret = gpiod_direction_input(pub_gpio);
 	if (ret < 0) {
-		sdiohal_err("req gpio irq = %d fail!!!", pub_gpio_num);
+		sdiohal_err("public_int GPIO input set fail");
+		gpiod_put(pub_gpio);
 		return ret;
 	}
 
-	ret = gpio_direction_input(pub_gpio_num);
-	if (ret < 0) {
-		sdiohal_err("public_int, gpio-%d input set fail!!!",
-			pub_gpio_num);
-		return ret;
-	}
-
-	sdiohal_public_irq = gpio_to_irq(pub_gpio_num);
+	sdiohal_public_irq = gpiod_to_irq(pub_gpio);
+	gpiod_put(pub_gpio);
 
 	ret = request_irq(sdiohal_public_irq,
 			sdiohal_public_isr,

@@ -20,7 +20,6 @@
 #include <linux/gpio.h>
 #include <linux/ioport.h>
 #include <linux/clk.h>
-#include <linux/of_gpio.h>
 #include <linux/version.h>
 #include <marlin_platform.h>
 

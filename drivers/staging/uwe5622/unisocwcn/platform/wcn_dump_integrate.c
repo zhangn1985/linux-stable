@@ -9,6 +9,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  */
+#include <linux/string.h>
 #include "bufring.h"
 #include "wcn_glb.h"
 #include "wcn_log.h"
@@ -150,10 +151,10 @@ static int wcn_fill_dump_head_info(struct wcn_dump_mem_reg *mem_cfg, int cnt)
 		return -1;
 	}
 
-	strncpy(head->version, WCN_DUMP_VERSION_NAME,
-		strlen(WCN_DUMP_VERSION_NAME)+1);
-	strncpy(head->sub_version, WCN_DUMP_VERSION_SUB_NAME,
-		strlen(WCN_DUMP_VERSION_SUB_NAME)+1);
+	strscpy(head->version, WCN_DUMP_VERSION_NAME,
+		sizeof(head->version));
+	strscpy(head->sub_version, WCN_DUMP_VERSION_SUB_NAME,
+		sizeof(head->sub_version));
 	head->n_sec = cpu_to_le32(cnt);
 	len = head_len;
 	for (i = 0; i < cnt; i++) {

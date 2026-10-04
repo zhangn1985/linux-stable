@@ -109,20 +109,16 @@ int  bluesleep_init(void)
 		retval = -ENOMEM;
 		goto fail;
 	}
-	tx_ws = wakeup_source_create("BT_TX_wakelock");
-	rx_ws = wakeup_source_create("BT_RX_wakelock");
-	wakeup_source_add(tx_ws);
-	wakeup_source_add(rx_ws);
+	tx_ws = wakeup_source_register(NULL, "BT_TX_wakelock");
+	rx_ws = wakeup_source_register(NULL, "BT_RX_wakelock");
 	return 0;
 
 fail:
 	remove_proc_entry("btwrite", sleep_dir);
 	remove_proc_entry("sleep", bluetooth_dir);
 	remove_proc_entry("bluetooth", 0);
-	wakeup_source_remove(tx_ws);
-	wakeup_source_remove(rx_ws);
-	wakeup_source_destroy(tx_ws);
-	wakeup_source_destroy(rx_ws);
+	wakeup_source_unregister(tx_ws);
+	wakeup_source_unregister(rx_ws);
 	return retval;
 }
 
@@ -132,10 +128,8 @@ void  bluesleep_exit(void)
 	remove_proc_entry("btwrite", sleep_dir);
 	remove_proc_entry("sleep", bluetooth_dir);
 	remove_proc_entry("bluetooth", 0);
-	wakeup_source_remove(tx_ws);
-	wakeup_source_remove(rx_ws);
-	wakeup_source_destroy(tx_ws);
-	wakeup_source_destroy(rx_ws);
+	wakeup_source_unregister(tx_ws);
+	wakeup_source_unregister(rx_ws);
 }
 
 /*module_init(bluesleep_init);*/

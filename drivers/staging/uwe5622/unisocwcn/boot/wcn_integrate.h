@@ -30,7 +30,6 @@
 #include <linux/mm.h>
 #include <linux/module.h>
 #include <linux/mfd/syscon.h>
-#include <linux/of_gpio.h>
 #include <linux/of_address.h>
 #include <linux/of_device.h>
 #include <linux/proc_fs.h>

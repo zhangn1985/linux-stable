@@ -350,7 +350,8 @@ int sprdwl_add_topop_list(int chn, struct mbuf_t *head,
 	}
 	misc_work->vif = NULL;
 	misc_work->id = SPRDWL_POP_MBUF;
-	memcpy(misc_work->data, &pop_work, sizeof(struct sprdwl_pop_work));
+	memcpy((u8 *)misc_work + sizeof(*misc_work), &pop_work,
+	       sizeof(struct sprdwl_pop_work));
 
 	sprdwl_queue_work(intf->priv, misc_work);
 	return 0;
@@ -1687,7 +1688,8 @@ void sprdwl_tx_addba(struct sprdwl_intf *intf,
 	}
 	misc_work->vif = vif;
 	misc_work->id = SPRDWL_WORK_ADDBA;
-	memcpy(misc_work->data, &addba, sizeof(struct host_addba_param));
+	memcpy((u8 *)misc_work + sizeof(*misc_work), &addba,
+	       sizeof(struct host_addba_param));
 
 	sprdwl_queue_work(vif->priv, misc_work);
 	sprdwl_put_vif(vif);

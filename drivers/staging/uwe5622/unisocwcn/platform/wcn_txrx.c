@@ -303,8 +303,8 @@ int mdbg_ring_init(void)
 	}
 
 	/*wakeup_source pointer*/
-	ring_dev->rw_wake_lock = wakeup_source_create("mdbg_wake_lock");
-	wakeup_source_add(ring_dev->rw_wake_lock);
+	ring_dev->rw_wake_lock = wakeup_source_register(NULL,
+							"mdbg_wake_lock");
 
 	spin_lock_init(&ring_dev->rw_lock);
 	mutex_init(&ring_dev->mdbg_read_mutex);
@@ -333,8 +333,7 @@ void mdbg_ring_remove(void)
 	mutex_destroy(&ring_dev->mdbg_read_mutex);
 
 	/*wakeup_source pointer*/
-	wakeup_source_remove(ring_dev->rw_wake_lock);
-	wakeup_source_destroy(ring_dev->rw_wake_lock);
+	wakeup_source_unregister(ring_dev->rw_wake_lock);
 
 	mdbg_ring_destroy(ring_dev->ring);
 	mdbg_dev->ring_dev = NULL;

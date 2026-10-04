@@ -944,12 +944,12 @@ static int sprdwl_set_mac(struct net_device *dev, void *addr)
 		if (!is_zero_ether_addr(sa->sa_data)) {
 			vif->has_rand_mac = true;
 			memcpy(vif->random_mac, sa->sa_data, ETH_ALEN);
-			memcpy(dev->dev_addr, sa->sa_data, ETH_ALEN);
+			dev_addr_set(dev, sa->sa_data);
 		} else {
 			vif->has_rand_mac = false;
 			netdev_info(dev, "need clear random mac for sta/softap mode\n");
 			memset(vif->random_mac, 0, ETH_ALEN);
-			memcpy(dev->dev_addr, vif->mac, ETH_ALEN);
+			dev_addr_set(dev, vif->mac);
 		}
 	}
 	/*return success to pass vts test*/
@@ -1047,7 +1047,7 @@ static int sprdwl_inetaddr6_event(struct notifier_block *this,
 			}
 			work->vif = vif;
 			work->id = SPRDWL_WORK_NOTIFY_IP;
-			ipv6_addr = (u8 *)work->data;
+			ipv6_addr = (u8 *)work + sizeof(*work);
 			memcpy(ipv6_addr, (u8 *)&inet6_ifa->addr,
 				   SPRDWL_IPV6_ADDR_LEN);
 			sprdwl_queue_work(vif->priv, work);

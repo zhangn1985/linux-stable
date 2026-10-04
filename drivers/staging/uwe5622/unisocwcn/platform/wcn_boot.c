@@ -19,7 +19,9 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/mfd/syscon.h>
-#include <linux/of_gpio.h>
+#include <linux/gpio.h>
+#include <linux/gpio/consumer.h>
+#include <linux/of.h>
 #include <linux/of_device.h>
 #include <linux/platform_device.h>
 #include <linux/regulator/consumer.h>
@@ -222,8 +224,8 @@ struct marlin_device {
 	int coexist;
 	int wakeup_ap;
 	int ap_send_data;
-	int reset;
-	int chip_en;
+	struct gpio_desc *reset;
+	struct gpio_desc *chip_en;
 	int int_ap;
 	/* power sequence */
 	/* VDDIO->DVDD12->chip_en->rst_N->AVDD12->AVDD33 */
@@ -1439,6 +1441,9 @@ static void marlin_unregistsr_bt_wake(void)
 static int marlin_parse_dt(struct platform_device *pdev)
 {
 #ifdef CONFIG_WCN_PARSE_DTS
+	struct gpio_desc *int_ap;
+#endif
+#ifdef CONFIG_WCN_PARSE_DTS
 	struct device_node *np = pdev->dev.of_node;
 #elif defined CONFIG_AW_BOARD
 	struct device_node *np = NULL;
@@ -1538,48 +1543,37 @@ static int marlin_parse_dt(struct platform_device *pdev)
 #endif /* end of CONFIG_WCN_PARSE_DTS and CONFIG_WCN_PMIC */
 
 #ifdef CONFIG_WCN_PARSE_DTS
-	marlin_dev->chip_en = of_get_named_gpio(np, "wl-reg-on", 0);
-#else
-	marlin_dev->chip_en = 0;
-#endif
-	if (marlin_dev->chip_en > 0) {
-		WCN_INFO("%s chip_en gpio=%d\n", __func__,
-			 marlin_dev->chip_en);
-		if (!gpio_is_valid(marlin_dev->chip_en)) {
-			WCN_ERR("chip_en gpio is invalid: %d\n",
-				marlin_dev->chip_en);
-			return -EINVAL;
-		}
-		ret = gpio_request(marlin_dev->chip_en, "chip_en");
-		if (ret) {
-			WCN_ERR("gpio chip_en request err: %d\n",
-				marlin_dev->chip_en);
-			marlin_dev->chip_en = 0;
-		}
+	marlin_dev->chip_en = devm_gpiod_get_index(&pdev->dev, "wl-reg-on",
+						  0, GPIOD_OUT_LOW);
+	if (IS_ERR(marlin_dev->chip_en)) {
+		if (PTR_ERR(marlin_dev->chip_en) == -ENOENT)
+			marlin_dev->chip_en = NULL;
+		else
+			return PTR_ERR(marlin_dev->chip_en);
 	}
+#else
+	marlin_dev->chip_en = NULL;
+#endif
 
 #ifdef CONFIG_WCN_PARSE_DTS
-	marlin_dev->reset = of_get_named_gpio(np, "bt-reg-on", 0);
-#else
-	marlin_dev->reset = 0;
-#endif
-	if (marlin_dev->reset > 0) {
-		WCN_INFO("%s reset gpio=%d\n", __func__, marlin_dev->reset);
-		if (!gpio_is_valid(marlin_dev->reset)) {
-			WCN_ERR("reset gpio is invalid: %d\n",
-				marlin_dev->reset);
-			return -EINVAL;
-		}
-		ret = gpio_request(marlin_dev->reset, "reset");
-		if (ret) {
-			WCN_ERR("gpio reset request err: %d\n",
-				marlin_dev->reset);
-			marlin_dev->reset = 0;
-		}
+	marlin_dev->reset = devm_gpiod_get_index(&pdev->dev, "bt-reg-on",
+						  0, GPIOD_OUT_LOW);
+	if (IS_ERR(marlin_dev->reset)) {
+		if (PTR_ERR(marlin_dev->reset) == -ENOENT)
+			marlin_dev->reset = NULL;
+		else
+			return PTR_ERR(marlin_dev->reset);
 	}
+#else
+	marlin_dev->reset = NULL;
+#endif
 
 #ifdef CONFIG_WCN_PARSE_DTS
-	marlin_dev->int_ap = of_get_named_gpio(np, "pub-int-gpio", 0);
+	int_ap = devm_gpiod_get_index_optional(&pdev->dev, "pub-int", 0,
+						       GPIOD_IN);
+	if (IS_ERR(int_ap))
+		return PTR_ERR(int_ap);
+	marlin_dev->int_ap = int_ap ? desc_to_gpio(int_ap) : 0;
 #else
 	marlin_dev->int_ap = 0;
 #endif
@@ -1589,12 +1583,6 @@ static int marlin_parse_dt(struct platform_device *pdev)
 			WCN_ERR("int irq is invalid: %d\n",
 				marlin_dev->int_ap);
 			return -EINVAL;
-		}
-		ret = gpio_request(marlin_dev->int_ap, "int_ap");
-		if (ret) {
-			WCN_ERR("int_ap request err: %d\n",
-				marlin_dev->int_ap);
-			marlin_dev->int_ap = 0;
 		}
 	}
 
@@ -1643,23 +1631,15 @@ static int marlin_parse_dt(struct platform_device *pdev)
 
 #ifdef CONFIG_WCN_PARSE_DTS
 	if (of_property_read_bool(np, "bt-wake-host")) {
-		int bt_wake_host_gpio;
+		struct gpio_desc *bt_wake_host_gpio;
 
 		WCN_INFO("wcn config bt wake host\n");
 		marlin_dev->bt_wl_wake_host_en |= BIT(BT_WAKE_HOST);
 		bt_wake_host_gpio =
-			of_get_named_gpio(np, "bt-wake-host-gpio", 0);
-		WCN_INFO("%s bt-wake-host-gpio=%d\n", __func__,
-			 bt_wake_host_gpio);
-		if (!gpio_is_valid(bt_wake_host_gpio)) {
-			WCN_ERR("int irq is invalid: %d\n",
-				bt_wake_host_gpio);
-			return -EINVAL;
-		}
-		ret = gpio_request(bt_wake_host_gpio, "bt-wake-host-gpio");
-		if (ret)
-			WCN_ERR("bt-wake-host-gpio request err: %d\n",
-				bt_wake_host_gpio);
+			devm_gpiod_get_index(&pdev->dev, "bt-wake-host", 0,
+						     GPIOD_IN);
+		if (IS_ERR(bt_wake_host_gpio))
+			return PTR_ERR(bt_wake_host_gpio);
 	}
 #else
 #ifdef CONFIG_BT_WAKE_HOST_EN
@@ -1675,23 +1655,15 @@ static int marlin_parse_dt(struct platform_device *pdev)
 
 #ifdef CONFIG_WCN_PARSE_DTS
 	if (of_property_read_bool(np, "wl-wake-host")) {
-		int wl_wake_host_gpio;
+		struct gpio_desc *wl_wake_host_gpio;
 
 		WCN_INFO("wcn config wifi wake host\n");
 		marlin_dev->bt_wl_wake_host_en |= BIT(WL_WAKE_HOST);
 		wl_wake_host_gpio =
-			of_get_named_gpio(np, "wl-wake-host-gpio", 0);
-		WCN_INFO("%s wl-wake-host-gpio=%d\n", __func__,
-			 wl_wake_host_gpio);
-		if (!gpio_is_valid(wl_wake_host_gpio)) {
-			WCN_ERR("int irq is invalid: %d\n",
-				wl_wake_host_gpio);
-			return -EINVAL;
-		}
-		ret = gpio_request(wl_wake_host_gpio, "wl-wake-host-gpio");
-		if (ret)
-			WCN_ERR("wl-wake-host-gpio request err: %d\n",
-				wl_wake_host_gpio);
+			devm_gpiod_get_index(&pdev->dev, "wl-wake-host", 0,
+						     GPIOD_IN);
+		if (IS_ERR(wl_wake_host_gpio))
+			return PTR_ERR(wl_wake_host_gpio);
 	}
 #else
 #ifdef CONFIG_WL_WAKE_HOST_EN
@@ -1735,13 +1707,6 @@ static int marlin_gpio_free(struct platform_device *pdev)
 {
 	if (!marlin_dev)
 		return -1;
-
-	if (marlin_dev->reset > 0)
-		gpio_free(marlin_dev->reset);
-	if (marlin_dev->chip_en > 0)
-		gpio_free(marlin_dev->chip_en);
-	if (marlin_dev->int_ap > 0)
-		gpio_free(marlin_dev->int_ap);
 
 	return 0;
 }
@@ -2553,11 +2518,10 @@ static int marlin_reset(int val)
 	hi_gpio_set_value(RTL_REG_RST_GPIO, 1);
 #endif
 
-	if (marlin_dev->reset > 0) {
-		if (gpio_is_valid(marlin_dev->reset)) {
-			gpio_direction_output(marlin_dev->reset, 0);
+	if (marlin_dev->reset) {
+		if (gpiod_direction_output(marlin_dev->reset, 0) == 0) {
 			mdelay(RESET_DELAY);
-			gpio_direction_output(marlin_dev->reset, 1);
+			gpiod_set_value_cansleep(marlin_dev->reset, 1);
 		}
 	}
 
@@ -2585,19 +2549,15 @@ static int chip_reset_release(int val)
 		reset_count--;
 	}
 #else
-	if (marlin_dev->reset <= 0)
+	if (!marlin_dev->reset)
 		return 0;
 
-	if (!gpio_is_valid(marlin_dev->reset)) {
-		WCN_ERR("reset gpio error\n");
-		return -1;
-	}
 	if (val) {
 		if (reset_count == 0)
-			gpio_direction_output(marlin_dev->reset, 1);
+			gpiod_set_value_cansleep(marlin_dev->reset, 1);
 		reset_count++;
 	} else {
-		gpio_direction_output(marlin_dev->reset, 0);
+		gpiod_set_value_cansleep(marlin_dev->reset, 0);
 		reset_count--;
 	}
 #endif
@@ -2647,20 +2607,19 @@ void marlin_chip_en(bool enable, bool reset)
 	 * Incar board pull chipen gpio at pin control.
 	 * Hisi board pull chipen gpio at hi_sdio_detect.ko.
 	 */
-	if (marlin_dev->chip_en <= 0)
+	if (!marlin_dev->chip_en)
 		return;
 
-	if (gpio_is_valid(marlin_dev->chip_en)) {
-		if (reset) {
-			gpio_direction_output(marlin_dev->chip_en, 0);
+	if (reset) {
+			gpiod_set_value_cansleep(marlin_dev->chip_en, 0);
 			WCN_INFO("marlin gnss chip en reset\n");
 			msleep(100);
-			gpio_direction_output(marlin_dev->chip_en, 1);
+			gpiod_set_value_cansleep(marlin_dev->chip_en, 1);
 		} else if (enable) {
 			if (chip_en_count == 0) {
-				gpio_direction_output(marlin_dev->chip_en, 0);
+				gpiod_set_value_cansleep(marlin_dev->chip_en, 0);
 				mdelay(1);
-				gpio_direction_output(marlin_dev->chip_en, 1);
+				gpiod_set_value_cansleep(marlin_dev->chip_en, 1);
 				mdelay(1);
 				WCN_INFO("marlin chip en pull up\n");
 			}
@@ -2668,11 +2627,10 @@ void marlin_chip_en(bool enable, bool reset)
 		} else {
 			chip_en_count--;
 			if (chip_en_count == 0) {
-				gpio_direction_output(marlin_dev->chip_en, 0);
+				gpiod_set_value_cansleep(marlin_dev->chip_en, 0);
 				WCN_INFO("marlin chip en pull down\n");
 			}
 		}
-	}
 }
 EXPORT_SYMBOL_GPL(marlin_chip_en);
 
@@ -3781,10 +3739,8 @@ static int marlin_probe(struct platform_device *pdev)
 	marlin_dev->power_state = 0;
 	if (marlin_parse_dt(pdev) < 0)
 		WCN_INFO("marlin2 parse_dt some para not config\n");
-	if (marlin_dev->reset > 0) {
-		if (gpio_is_valid(marlin_dev->reset))
-			gpio_direction_output(marlin_dev->reset, 0);
-	}
+	if (marlin_dev->reset)
+		gpiod_direction_output(marlin_dev->reset, 0);
 	init_completion(&ge2_completion);
 	init_completion(&marlin_dev->carddetect_done);
 #ifdef CONFIG_WCN_SLP

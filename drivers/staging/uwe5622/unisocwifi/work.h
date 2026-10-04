@@ -50,7 +50,7 @@ struct sprdwl_work {
 #define SPRDWL_WORK_VOWIFI_DATA_PROTECTION 18
 	u8 id;
 	u32 len;
-	u8 data[0];
+	u8 data[];
 };
 
 struct sprdwl_reg_mgmt {

@@ -21,9 +21,10 @@
 #include <linux/irq.h>
 #include <linux/kthread.h>
 #include <linux/module.h>
+#include <linux/gpio/consumer.h>
+#include <linux/of.h>
 #include <linux/of_device.h>
 #include <linux/of_platform.h>
-#include <linux/of_gpio.h>
 #include <linux/pm_runtime.h>
 #include <linux/mmc/card.h>
 #include <linux/mmc/core.h>
@@ -1201,7 +1202,7 @@ static int sdiohal_enable_slave_irq(void)
 	return 0;
 }
 
-static int sdiohal_host_irq_init(unsigned int irq_gpio_num)
+static int sdiohal_host_irq_init(struct gpio_desc *irq_gpio)
 {
 	struct sdiohal_data_t *p_data = sdiohal_get_data();
 	int ret = 0;
@@ -1220,22 +1221,16 @@ static int sdiohal_host_irq_init(unsigned int irq_gpio_num)
 		     ((p_data->irq_trigger_type == IRQF_TRIGGER_LOW) ?
 		     "low" : "high"));
 #else
-	if (irq_gpio_num == 0)
+	if (!irq_gpio)
 		return ret;
 
-	ret = gpio_request(irq_gpio_num, "sdiohal_gpio");
+	ret = gpiod_direction_input(irq_gpio);
 	if (ret < 0) {
-		sdiohal_err("req gpio irq = %d fail!!!", irq_gpio_num);
+		sdiohal_err("sdio irq gpio input set fail!!!");
 		return ret;
 	}
 
-	ret = gpio_direction_input(irq_gpio_num);
-	if (ret < 0) {
-		sdiohal_err("gpio:%d input set fail!!!", irq_gpio_num);
-		return ret;
-	}
-
-	p_data->irq_num = gpio_to_irq(irq_gpio_num);
+	p_data->irq_num = gpiod_to_irq(irq_gpio);
 	p_data->irq_trigger_type = IRQF_TRIGGER_HIGH;
 #endif
 
@@ -1351,13 +1346,11 @@ static int sdiohal_parse_dt(void)
 		p_data->irq_type = SDIOHAL_RX_POLLING;
 	else {
 		p_data->irq_type = SDIOHAL_RX_EXTERNAL_IRQ;
-		p_data->gpio_num =
-			of_get_named_gpio(np, "sdio-ext-int-gpio", 0);
-		if (!gpio_is_valid(p_data->gpio_num)) {
-			sdiohal_err("can not get sdio int gpio%d\n",
-				    p_data->gpio_num);
-			p_data->gpio_num = 0;
-		}
+		p_data->gpio_num = fwnode_gpiod_get_index(of_fwnode_handle(np),
+							  "sdio-ext-int", 0,
+							  GPIOD_IN, "sdiohal");
+		if (IS_ERR(p_data->gpio_num))
+			p_data->gpio_num = NULL;
 	}
 #else /* else of CONFIG_WCN_PARSE_DTS */
 	p_data->gpio_num = 0;
@@ -1378,7 +1371,8 @@ static int sdiohal_parse_dt(void)
 		     p_data->adma_rx_enable, p_data->pwrseq,
 		     ((p_data->irq_type == SDIOHAL_RX_EXTERNAL_IRQ) ? "gpio" :
 		     (((p_data->irq_type == SDIOHAL_RX_INBAND_IRQ) ?
-		     "data" : "polling"))), p_data->gpio_num,
+			     "data" : "polling"))),
+		     p_data->gpio_num ? desc_to_gpio(p_data->gpio_num) : 0,
 		     sprdwcn_bus_get_blk_size());
 
 #ifdef CONFIG_WCN_PARSE_DTS
@@ -2299,8 +2293,10 @@ void sdiohal_exit(void)
 		sdiohal_remove_card();
 	}
 	if ((p_data->irq_type == SDIOHAL_RX_EXTERNAL_IRQ) &&
-		(p_data->irq_num > 0))
-		gpio_free(p_data->gpio_num);
+		(p_data->irq_num > 0)) {
+		gpiod_put(p_data->gpio_num);
+		p_data->gpio_num = NULL;
+	}
 	sdiohal_stop_thread();
 	sdiohal_misc_deinit();
 	if (sdiohal_data) {

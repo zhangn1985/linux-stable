@@ -10,9 +10,9 @@
  * GNU General Public License for more details.
  */
 #include <asm/byteorder.h>
+#include <linux/string.h>
 #include <marlin_platform.h>
 #include <wcn_bus.h>
-
 #include "bufring.h"
 #include "rdc_debug.h"
 #include "wcn_txrx.h"
@@ -226,7 +226,7 @@ out:
 	return count;
 }
 
-void mdbg_clear_log(void)
+static void mdbg_clear_log(void)
 {
 	if (mdbg_dev->ring_dev->ring->rp
 		!= mdbg_dev->ring_dev->ring->wp) {
@@ -470,10 +470,10 @@ static int wcn_fill_dump_head_info(struct wcn_dump_mem_reg *mem_cfg, int cnt)
 		return -1;
 	}
 
-	strncpy(head->version, WCN_DUMP_VERSION_NAME,
-		strlen(WCN_DUMP_VERSION_NAME));
-	strncpy(head->sub_version, WCN_DUMP_VERSION_SUB_NAME,
-		strlen(WCN_DUMP_VERSION_SUB_NAME));
+	strscpy(head->version, WCN_DUMP_VERSION_NAME,
+		sizeof(head->version));
+	strscpy(head->sub_version, WCN_DUMP_VERSION_SUB_NAME,
+		sizeof(head->sub_version));
 	head->n_sec = cpu_to_le32(cnt);
 	len = head_len;
 	for (i = 0; i < cnt; i++) {
