@@ -32,10 +32,6 @@
 .rx_threshold = threshold, .timeout = time, .pop_link = pop,\
 .push_link = push, .tx_complete = complete, .power_notify = suspend }
 
-#ifndef CPUFREQ_ADJUST
-#define CPUFREQ_ADJUST CPUFREQ_CREATE_POLICY
-#endif
-
 struct sprdwl_intf_ops g_intf_ops;
 
 static inline struct sprdwl_intf *get_intf(void)
@@ -377,7 +373,6 @@ void sprdwl_count_tx_tp(struct sprdwl_tx_msg *tx_msg, int num)
 	if (div_u64((tx_msg->tx_data_num * 1000), timeus) >= intf->txnum_level &&
 		tx_msg->tx_data_num >= 1000) {
 		tx_msg->tx_data_num = 0;
-		sprdwl_boost();
 	} else if (timeus >= USEC_PER_SEC) {
 		tx_msg->tx_data_num = 0;
 	}
@@ -1048,7 +1043,6 @@ void sprdwl_count_rx_tp(struct sprdwl_rx_if *rx_if, int num)
 	if (div_u64((rx_if->rx_data_num * 1000), timeus) >= intf->rxnum_level &&
 		rx_if->rx_data_num >= 1000) {
 		rx_if->rx_data_num = 0;
-		sprdwl_boost();
 	} else if (timeus >= USEC_PER_SEC) {
 		rx_if->rx_data_num = 0;
 	}
@@ -1733,47 +1727,6 @@ void sprdwl_tx_delba(struct sprdwl_intf *intf,
 	sprdwl_put_vif(vif);
 }
 
-int sprdwl_notifier_boost(struct notifier_block *nb, unsigned long event, void *data)
-{
-	struct cpufreq_policy_data *policy = data;
-	unsigned long min_freq;
-	unsigned long max_freq = policy->cpuinfo.max_freq;
-	struct sprdwl_intf *intf = get_intf();
-	u8 boost;
-	if (NULL == intf)
-		return NOTIFY_DONE;
-
-	boost = intf->boost;
-
-	if (event != CPUFREQ_ADJUST)
-		return NOTIFY_DONE;
-
-	min_freq = boost ? 1200000 : 400000;
-	cpufreq_verify_within_limits(policy, min_freq, max_freq);
-
-	return NOTIFY_OK;
-}
-
-void sprdwl_boost(void)
-{
-	struct sprdwl_intf *intf = get_intf();
-
-	if (intf->boost == 0) {
-		intf->boost = 1;
-		cpufreq_update_policy(0);
-	}
-}
-
-void sprdwl_unboost(void)
-{
-	struct sprdwl_intf *intf = get_intf();
-
-	if (intf->boost == 1) {
-		intf->boost = 0;
-		cpufreq_update_policy(0);
-	}
-}
-
 void adjust_txnum_level(char *buf, unsigned char offset)
 {
 #define MAX_LEN 4
@@ -1861,7 +1814,6 @@ int sprdwl_intf_init(struct sprdwl_priv *priv, struct sprdwl_intf *intf)
 	intf->fw_power_down = 0;
 	intf->txnum_level = BOOST_TXNUM_LEVEL;
 	intf->rxnum_level = BOOST_RXNUM_LEVEL;
-	intf->boost = 0;
 #ifdef UNISOC_WIFI_PS
 		init_completion(&intf->suspend_completed);
 #endif

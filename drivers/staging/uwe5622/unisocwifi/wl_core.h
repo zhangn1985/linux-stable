@@ -195,7 +195,6 @@ struct sprdwl_intf {
 	struct dbg_ini_cfg ini_cfg;
 	/*wifi bt coex mode, 1:BT is on, 0:BT is off*/
 	u8 coex_bt_on;
-	u8 boost;
 	unsigned int txnum_level;
 	unsigned int rxnum_level;
 #ifdef STA_SOFTAP_SCC_MODE
